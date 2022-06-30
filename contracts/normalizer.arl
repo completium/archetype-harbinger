@@ -1,0 +1,79 @@
+archetype normalizer(
+  assetCodes     : list<string>,
+  oracleContract : address,
+  numDataPoints  : nat
+)
+
+constant INVALID_CALLER : string = "bad sender"
+constant BAD_REQUEST    : string = "bad request"
+constant INVALID_SUM    : string = "invalid sum"
+
+record queue {
+  first : int           = 0i;
+  last  : int           = -1;
+  sum   : nat           = 0;
+  saved : map<int, nat> = [(0,0)]
+}
+
+function push(q : queue, v : nat) : queue {
+  const pop      = q.last - q.first + 1 > numDataPoints;
+  const new_sum ?= int_to_nat(q.sum + v - (pop ? (q.saved[q.first] ? the : 0) : 0)) : INVALID_SUM;
+  return {
+    first = (q.first + (pop ? 1 : 0));
+    last  = (q.last + 1);
+    sum   = new_sum
+  }
+}
+
+asset assetMap to big_map {
+  assets         : string;
+  computedPrice  : nat  = 0;
+  lastUpdateTime : date = int_to_date(0);
+  prices         : queue;
+  volumes        : queue
+}
+
+record update_param {
+  start    : date;
+  %end     : date;
+  open     : nat;
+  high     : nat;
+  low      : nat;
+  close    : nat;
+  volume   : nat
+}
+
+entry update(upm : map<asset_key<assetMap>, update_param>) {
+  called by oracleContract otherwise INVALID_CALLER
+  effect {
+    for assetcode in assetCodes do
+      if upm.contains(assetcode) then begin
+        const assetData  ?= assetMap[assetcode];
+        const updateData ?= upm[assetcode];
+        if updateData.start > assetData.lastUpdateTime then begin
+          if updateData.volume > 0 then begin
+            const volumePrice = ((updateData.high + updateData.low + updateData.close) div 3) * updateData.volume;
+            assetMap.update(assetcode, {
+              computedPrice  := (assetData.prices.sum div assetData.volumes.sum);
+              lastUpdateTime := updateData.start;
+              prices         := push(assetData.prices, volumePrice);
+              volumes        := push(assetData.volumes, updateData.volume)
+            })
+          end
+        end
+      end
+    done
+  }
+}
+
+getter get(requestedAsset : asset_key<assetMap>) : asset_key<assetMap> * date * nat {
+  do_require(assetMap.contains(requestedAsset), BAD_REQUEST);
+  const assetData  ?= assetMap[requestedAsset];
+  return ((requestedAsset, assetData.lastUpdateTime, assetData.computedPrice))
+}
+
+view getPrice(requestedAsset : asset_key<assetMap>) : date * nat {
+  do_require(assetMap.contains(requestedAsset), BAD_REQUEST);
+  const assetData  ?= assetMap[requestedAsset];
+  return ((assetData.lastUpdateTime, assetData.computedPrice))
+}

@@ -1,0 +1,52 @@
+archetype oracle(publickey : key)
+
+asset oracleData to big_map {
+  assets   : string;
+  start    : date;
+  %end     : date;
+  open     : nat;
+  high     : nat;
+  low      : nat;
+  close    : nat;
+  volume   : nat
+} initialized by {
+  { "XTZ-USDT"; int_to_date(0); int_to_date(0); 0; 0; 0; 0; 0 }
+}
+
+states =
+| Running initial
+| Revoked
+
+constant INVALID_SIG : string = "bad sig"
+constant REVOKED     : string = "revoked"
+
+//record update_value {
+//  sig : signature;
+//  data: asset_value<oracleData>
+//}
+
+entry update(upm : map<asset_key<oracleData>, (signature * asset_value<oracleData>)>) {
+  state is Running otherwise REVOKED
+  effect {
+    for (k, newData) in upm do
+      if oracleData.contains(k) then begin
+        if newData[1].start > oracleData[k].start then begin
+          const packed = pack((k, newData[1]));
+          do_require(check_signature(publickey, newData[0], packed), INVALID_SIG);
+          oracleData.put(make_asset<oracleData>(k, newData[1]))
+        end
+      end
+    done
+  }
+}
+
+entry push(e : contract<asset_collection<oracleData>>) {
+  transfer 0tz to entry e(oracleData.as_container())
+}
+
+transition revoke(sig: signature) {
+  require {
+    r0: check_signature(publickey, sig, pack(none<key>))
+  }
+  from Running to Revoked
+}
