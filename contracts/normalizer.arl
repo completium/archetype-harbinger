@@ -21,7 +21,8 @@ function push(q : queue, v : nat) : queue {
   return {
     first = (q.first + (pop ? 1 : 0));
     last  = (q.last + 1);
-    sum   = new_sum
+    sum   = new_sum;
+    saved = put(pop ? remove(q.saved, q.first): q.saved, q.last, v)
   }
 }
 
