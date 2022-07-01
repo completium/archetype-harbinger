@@ -29,19 +29,17 @@ entry update(upm : map<asset_key<oracleData>, (signature * asset_value<oracleDat
   state is Running otherwise REVOKED
   effect {
     for (k, newData) in upm do
-      if oracleData.contains(k) then begin
-        if newData[1].start > oracleData[k].start then begin
-          const packed = pack((k, newData[1]));
-          do_require(check_signature(publickey, newData[0], packed), INVALID_SIG);
-          oracleData.put(make_asset<oracleData>(k, newData[1]))
-        end
+      if oracleData.contains(k) and newData[1].start > oracleData[k].start then  begin
+        const packed = pack((k, newData[1]));
+        do_require(check_signature(publickey, newData[0], packed), INVALID_SIG);
+        oracleData.put(make_asset<oracleData>(k, newData[1]))
       end
     done
   }
 }
 
-entry push(e : contract<asset_collection<oracleData>>) {
-  transfer 0tz to entry e(oracleData.as_container())
+entry push(normalizer : contract<map<asset_key<oracleData>, asset_value<oracleData>>>) {
+  transfer 0tz to entry normalizer(oracleData.as_container())
 }
 
 transition revoke(sig: signature) {
