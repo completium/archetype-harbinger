@@ -38,7 +38,7 @@ entry update(upm : map<asset_key<oracleData>, (signature * asset_value<oracleDat
   }
 }
 
-entry push(normalizer : contract<map<asset_key<oracleData>, asset_value<oracleData>>>) {
+entry push(normalizer : contract<asset_collection<oracleData>>) {
   transfer 0tz to entry normalizer(oracleData.as_container())
 }
 
