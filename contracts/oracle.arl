@@ -1,7 +1,7 @@
 archetype oracle(publickey : key)
 
 asset oracleData to big_map {
-  assets   : string;
+  code     : string;
   start    : date;
   %end     : date;
   open     : nat;
@@ -10,7 +10,8 @@ asset oracleData to big_map {
   close    : nat;
   volume   : nat
 } initialized by {
-  { "XTZ-USD"; int_to_date(0); int_to_date(0); 0; 0; 0; 0; 0 }
+  { "XTZ-USD"; int_to_date(0); int_to_date(0); 0; 0; 0; 0; 0 };
+  { "BTC-USD"; int_to_date(0); int_to_date(0); 0; 0; 0; 0; 0 }
 }
 
 states =
@@ -19,6 +20,7 @@ states =
 
 constant INVALID_SIG : string = "bad sig"
 constant REVOKED     : string = "revoked"
+constant BAD_REQUEST : string = "bad request"
 
 //record update_value {
 //  sig : signature;
@@ -44,7 +46,15 @@ entry push(normalizer : contract<asset_collection<oracleData>>) {
 
 transition revoke(sig: signature) {
   require {
-    r0: check_signature(publickey, sig, pack(none<key>))
+    r0: check_signature(publickey, sig, pack(none<key>)) otherwise INVALID_SIG
   }
   from Running to Revoked
+  with effect {
+    oracleData.remove_all()
+  }
+}
+
+view getPrice(c : asset_key<oracleData>) : asset_value<oracleData> {
+  const data ?= oracleData[c] : BAD_REQUEST;
+  return data
 }

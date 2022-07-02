@@ -1,37 +1,13 @@
-const { isMockup, getValueFromBigMap, exprMichelineToJson, packTyped, blake2b, sign, keccak, getStorage } = require('@completium/completium-cli');
+/* Imports ---------------------------------------------------------- */
 
-// LIB ------------------------------------------------------------------------
+const {
+  getValueFromBigMap,
+  packTyped,
+  sign
+} = require('@completium/completium-cli');
+const Micheline = require('./micheline')
 
-exports.string_type = {
-  prim: "string"
-}
-
-exports.make_string = v => {
-  return { "string" : v }
-}
-
-exports.make_int = v => {
-  return { "int": v }
-}
-
-exports.make_prim = (p, a) => {
-  return {
-    prim: p,
-    args: a
-  }
-}
-
-exports.make_elt       = (a, b) => this.make_prim("Elt",  [ a, b ])
-exports.make_pair      = (a, b) => this.make_prim("Pair", [ a, b ])
-exports.make_pair_type = (a, b) => this.make_prim("pair", [ a, b ])
-
-exports.make_map = l => {
-  return l.map( x => {
-    return this.make_elt(x.key, x.value)
-  })
-}
-
-// ORACLE objects -------------------------------------------------------------
+/* ORACLE objects ---------------------------------------------------------- */
 
 exports.make_asset_value_oracleData = (asset_value_oracle) => {
   return  {
@@ -160,18 +136,26 @@ exports.asset_value_oracleData_type = {
   ]
 }
 
-exports.make_update_upm_key = a => this.make_string(a)
-exports.make_update_upm_value = (a, b) => this.make_pair(this.make_string(a), this.make_asset_value_oracleData(b))
+exports.make_update_upm_key = a => Micheline.make_string(a)
+exports.make_update_upm_value = (a, b) => Micheline.make_pair(Micheline.make_string(a), Micheline.make_asset_value_oracleData(b))
+
+const cmp = (a,b) => {
+  if (a.key.string === b.key.string) {
+    return 0;
+  }
+  return a.key.string < b.key.string ? -1 : 1;
+};
+
 exports.make_update_upm = l => {
-  return this.make_map(l.map(x => {
+  return Micheline.make_map(l.map(x => {
     return {
-      key   : this.make_string(x.key),
-      value : this.make_pair(this.make_string(x.value[0]), this.make_asset_value_oracleData(x.value[1]))
+      key   : Micheline.make_string(x.key),
+      value : Micheline.make_pair(Micheline.make_string(x.value[0]), this.make_asset_value_oracleData(x.value[1]))
     }
-  }))
+  }), cmp)
 }
 
-// Utils ----------------------------------------------------------------------
+/* Contract ---------------------------------------------------------------- */
 
 const oracle = new Object()
 
@@ -183,29 +167,73 @@ oracle.update = async (a, p) => {
   });
 }
 
+oracle.revoke = async (a, p) => {
+  await oracle.contract.revoke({
+    argJsonMichelson: Micheline.make_string(a),
+    as: p.as,
+    amount: p.amount
+  });
+}
+
 oracle.get_oracleData = async key => {
   const storage = await oracle.contract.getStorage()
   const data = await getValueFromBigMap(
     parseInt(storage.oracleData),
-    this.make_string(key),
-    this.string_type)
-  return {
-    start  : data.args[0].string,
-    end    : data.args[1].string,
-    open   : parseInt(data.args[2].int, 10),
-    high   : parseInt(data.args[3].int, 10),
-    low    : parseInt(data.args[4].int, 10),
-    close  : parseInt(data.args[5].int, 10),
-    volume : parseInt(data.args[6].int, 10)
+    Micheline.make_string(key),
+    Micheline.string_type)
+  if (data != undefined) {
+    return {
+        start  : data.args[0].string,
+        end    : data.args[1].string,
+        open   : parseInt(data.args[2].int, 10),
+        high   : parseInt(data.args[3].int, 10),
+        low    : parseInt(data.args[4].int, 10),
+        close  : parseInt(data.args[5].int, 10),
+        volume : parseInt(data.args[6].int, 10)
+    }
+  } else {
+    return undefined
+  }
+}
+
+exports.oracle_state = {
+  Running : 0,
+  Revoked : 1
+}
+
+oracle.get_state = async () => {
+  const storage = await oracle.contract.getStorage()
+  const state = storage._state
+  if (state.toNumber() == 0) {
+    return this.oracle_state.Running
+  } else {
+    return this.oracle_state.Revoked
   }
 }
 
 exports.oracle = oracle
 
-exports.sign_update_data = async (key, data, account) => {
-  const value = this.make_pair(this.make_string(key), this.make_asset_value_oracleData(data))
-  const type  = this.make_pair_type(this.string_type, this.asset_value_oracleData_type)
+/* Utils ------------------------------------------------------------------- */
+
+exports.sign_oracle_data = async (key, data, account) => {
+  const value = Micheline.make_pair(Micheline.make_string(key), this.make_asset_value_oracleData(data))
+  const type  = Micheline.make_pair_type(Micheline.string_type, this.asset_value_oracleData_type)
   const packed = packTyped(value, type)
   const signed = await sign(packed, { as: account.name })
   return signed.prefixSig
+}
+
+exports.sign_oracle_revoke = async (account) => {
+  const value = Micheline.none;
+  const type  = Micheline.make_option_type(this.key_type)
+  const packed = packTyped(value, type)
+  const signed = await sign(packed, { as: account.name })
+  return signed.prefixSig
+}
+
+/* Errors ------------------------------------------------------------------ */
+
+exports.errors = {
+  INVALID_SIG : "bad sig",
+  REVOKED     : "revoked"
 }
