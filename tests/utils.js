@@ -1,4 +1,4 @@
-const { isMockup, getValueFromBigMap, exprMichelineToJson, packTyped, blake2b, sign, keccak } = require('@completium/completium-cli');
+const { isMockup, getValueFromBigMap, exprMichelineToJson, packTyped, blake2b, sign, keccak, getStorage } = require('@completium/completium-cli');
 
 // LIB ------------------------------------------------------------------------
 
@@ -173,6 +173,18 @@ exports.make_update_upm = l => {
 
 // Utils ----------------------------------------------------------------------
 
+const oracle = new Object()
+
+oracle.update = async (a, p) => {
+  await oracle.contract.update({
+    argJsonMichelson: this.make_update_upm(a),
+    as: p.as,
+    amount: p.amount
+  });
+}
+
+exports.oracle = oracle
+
 exports.sign_update_data = async (key, data, account) => {
   const value = this.make_pair(this.make_string(key), this.make_asset_value_oracleData(data))
   const type  = this.make_pair_type(this.string_type, this.asset_value_oracleData_type)
@@ -181,7 +193,8 @@ exports.sign_update_data = async (key, data, account) => {
   return signed.prefixSig
 }
 
-exports.get_asset_value_oracleData = async (key) => {
+exports.get_asset_value_oracleData = async (contract, key) => {
+  const storage = await getStorage
   return {
     start  : 1,
     end    : 2,
