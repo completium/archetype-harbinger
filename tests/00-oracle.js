@@ -10,11 +10,13 @@ const {
 } = require('@completium/completium-cli');
 const {
   oracle,
-  sign_oracle_data,
-  sign_oracle_revoke,
   states,
   errors
 } = require('./oracle');
+const {
+  sign_oracle_data,
+  sign_oracle_revoke,
+} = require('./utils')
 const assert = require('assert');
 
 /* Accounts ---------------------------------------------------------------- */
