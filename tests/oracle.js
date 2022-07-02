@@ -1,11 +1,7 @@
 /* Imports ---------------------------------------------------------- */
 
-const {
-  getValueFromBigMap,
-  packTyped,
-  sign
-} = require('@completium/completium-cli');
-const Micheline = require('./micheline')
+const Completium = require('@completium/completium-cli');
+const Micheline  = require('./micheline')
 
 /* ORACLE objects ---------------------------------------------------------- */
 
@@ -177,7 +173,7 @@ oracle.revoke = async (a, p) => {
 
 oracle.get_oracleData = async key => {
   const storage = await oracle.contract.getStorage()
-  const data = await getValueFromBigMap(
+  const data = await Completium.getValueFromBigMap(
     parseInt(storage.oracleData),
     Micheline.make_string(key),
     Micheline.string_type)
