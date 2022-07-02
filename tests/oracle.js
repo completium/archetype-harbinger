@@ -213,24 +213,6 @@ oracle.get_state = async () => {
 
 exports.oracle = oracle
 
-/* Utils ------------------------------------------------------------------- */
-
-exports.sign_oracle_data = async (key, data, account) => {
-  const value = Micheline.make_pair(Micheline.make_string(key), this.make_asset_value_oracleData(data))
-  const type  = Micheline.make_pair_type(Micheline.string_type, this.asset_value_oracleData_type)
-  const packed = packTyped(value, type)
-  const signed = await sign(packed, { as: account.name })
-  return signed.prefixSig
-}
-
-exports.sign_oracle_revoke = async (account) => {
-  const value = Micheline.none;
-  const type  = Micheline.make_option_type(this.key_type)
-  const packed = packTyped(value, type)
-  const signed = await sign(packed, { as: account.name })
-  return signed.prefixSig
-}
-
 /* Errors ------------------------------------------------------------------ */
 
 exports.errors = {
