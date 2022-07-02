@@ -12,8 +12,14 @@ const {
   setQuiet,
 } = require('@completium/completium-cli');
 const {
-  make_update_data,
-  sign_update_data
+  make_asset_value_oracleData,
+  asset_value_oracleData_type,
+  sign_update_data,
+  make_map,
+  make_pair,
+  make_string,
+  make_update_upm_key,
+  make_update_upm_value
 } = require('./utils');
 const assert = require('assert');
 
@@ -50,13 +56,15 @@ describe('[Oracle] Contract deployment', async () => {
 
 describe('[Oracle] Update once with valid data', async () => {
   it('Update Oracle', async () => {
-    const asset = "XTZ-USD"
-    const data  = make_update_data(1, 2, 3, 4, 5, 6, 7)
+    const asset = make_string("XTZ-USD")
+    const data  = make_asset_value_oracleData(1, 2, 3, 4, 5, 6, 7)
     const sig   = await sign_update_data(asset, data, alice)
-    console.log(sig)
-    console.log(alice.pubk)
+    const arg   = make_map([ {
+      key:   make_update_upm_key(sig),
+      value: make_update_upm_value(sig, data)
+    }])
     await oracle.update({
-      argMichelson: `{ Elt "${asset}" (Pair "${sig}" (${data})) }`,
+      argJsonMichelson: arg,
       as: alice.pkh,
     });
   })
