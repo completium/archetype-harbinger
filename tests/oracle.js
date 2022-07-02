@@ -1,9 +1,9 @@
-/* Imports ---------------------------------------------------------- */
+/* Imports ----------------------------------------------------------------- */
 
 const Completium = require('@completium/completium-cli');
 const Micheline  = require('./micheline')
 
-/* ORACLE objects ---------------------------------------------------------- */
+/* OracleData -------------------------------------------------------------- */
 
 exports.make_asset_value_oracleData = (asset_value_oracle) => {
   return  {
@@ -153,26 +153,30 @@ exports.make_update_upm = l => {
 
 /* Contract ---------------------------------------------------------------- */
 
-const oracle = new Object()
+const contract = new Object()
 
-oracle.update = async (a, p) => {
-  await oracle.contract.update({
+exports.set_contract = c => {
+  contract.obj = c
+}
+
+exports.update = async (a, p) => {
+  await contract.obj.update({
     argJsonMichelson: this.make_update_upm(a),
     as: p.as,
     amount: p.amount
   });
 }
 
-oracle.revoke = async (a, p) => {
-  await oracle.contract.revoke({
+exports.revoke = async (a, p) => {
+  await contract.obj.revoke({
     argJsonMichelson: Micheline.make_string(a),
     as: p.as,
     amount: p.amount
   });
 }
 
-oracle.get_oracleData = async key => {
-  const storage = await oracle.contract.getStorage()
+exports.get_oracleData = async key => {
+  const storage = await contract.obj.getStorage()
   const data = await Completium.getValueFromBigMap(
     parseInt(storage.oracleData),
     Micheline.make_string(key),
@@ -197,8 +201,8 @@ exports.states = {
   Revoked : 1
 }
 
-oracle.get_state = async () => {
-  const storage = await oracle.contract.getStorage()
+exports.get_state = async () => {
+  const storage = await contract.obj.getStorage()
   const state = storage._state
   if (state.toNumber() == 0) {
     return this.states.Running
@@ -206,8 +210,6 @@ oracle.get_state = async () => {
     return this.states.Revoked
   }
 }
-
-exports.oracle = oracle
 
 /* Errors ------------------------------------------------------------------ */
 

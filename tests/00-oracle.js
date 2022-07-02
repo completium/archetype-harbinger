@@ -8,11 +8,7 @@ const {
   setMockupNow,
   setQuiet,
 } = require('@completium/completium-cli');
-const {
-  oracle,
-  states,
-  errors
-} = require('./oracle');
+const oracle = require('./oracle');
 const {
   sign_oracle_data,
   sign_oracle_revoke,
@@ -100,7 +96,7 @@ describe('[Oracle] Contract deployment', async () => {
         as: alice.pkh,
       }
     )
-    oracle.contract = oracle_contract
+    oracle.set_contract(oracle_contract)
   });
 })
 
@@ -143,7 +139,7 @@ describe('[Oracle] Update', async () => {
       await oracle.update([ { key: asset1, value: [ sig, input3 ] } ], {
         as: alice.pkh
       })
-    }, errors.INVALID_SIG)
+    }, oracle.errors.INVALID_SIG)
   })
   it('Update with stale asset does not fail', async () => {
     const sig1 = await sign_oracle_data(asset1, input3, alice)
@@ -179,7 +175,7 @@ describe('[Oracle] Revoke', async () => {
       await oracle.revoke(sig, {
         as : alice.pkh
       })
-    }, errors.INVALID_SIG)
+    }, oracle.errors.INVALID_SIG)
   })
   it('Revoke Oracle', async () => {
     const sig = await sign_oracle_revoke(alice)
@@ -187,7 +183,7 @@ describe('[Oracle] Revoke', async () => {
       as : alice.pkh
     })
     const state = await oracle.get_state()
-    assert(state == states.Revoked)
+    assert(state == oracle.states.Revoked)
     const output = await oracle.get_oracleData(asset1);
     assert(output == undefined)
   })
@@ -197,6 +193,6 @@ describe('[Oracle] Revoke', async () => {
       await oracle.update([ { key: asset1, value: [ sig, input3 ] } ], {
         as: alice.pkh
       })
-    }, errors.REVOKED)
+    }, oracle.errors.REVOKED)
   })
 })
