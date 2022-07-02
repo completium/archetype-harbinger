@@ -52,8 +52,8 @@ describe('[Oracle] Update once with valid data', async () => {
   it('Update Oracle', async () => {
     const asset = "XTZ-USD"
     const input  = {
-      start  : 1,
-      end    : 2,
+      start  : '1970-01-01T00:00:01Z',
+      end    : '1970-01-01T00:00:02Z',
       open   : 3,
       high   : 4,
       low    : 5,
@@ -61,10 +61,10 @@ describe('[Oracle] Update once with valid data', async () => {
       volume : 7
     }
     const sig   = await sign_update_data(asset, input, alice)
-    await oracle.update([ { key: asset, value: [ sig, input ] }], {
+    await oracle.update([ { key: asset, value: [ sig, input ] } ], {
       as: alice.pkh
     })
-    const output = await get_asset_value_oracleData(oracle, asset);
+    const output = await oracle.get_oracleData(asset);
     assert(JSON.stringify(input,0,2) == JSON.stringify(output,0,2))
   })
 })

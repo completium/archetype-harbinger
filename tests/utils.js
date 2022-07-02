@@ -38,13 +38,13 @@ exports.make_asset_value_oracleData = (asset_value_oracle) => {
     "prim": "Pair",
     "args": [
       {
-        "int": `${asset_value_oracle.start}`
+        "string": `${asset_value_oracle.start}`
       },
       {
         "prim": "Pair",
         "args": [
           {
-            "int": `${asset_value_oracle.end}`
+            "string": `${asset_value_oracle.end}`
           },
           {
             "prim": "Pair",
@@ -183,6 +183,23 @@ oracle.update = async (a, p) => {
   });
 }
 
+oracle.get_oracleData = async key => {
+  const storage = await oracle.contract.getStorage()
+  const data = await getValueFromBigMap(
+    parseInt(storage.oracleData),
+    this.make_string(key),
+    this.string_type)
+  return {
+    start  : data.args[0].string,
+    end    : data.args[1].string,
+    open   : parseInt(data.args[2].int, 10),
+    high   : parseInt(data.args[3].int, 10),
+    low    : parseInt(data.args[4].int, 10),
+    close  : parseInt(data.args[5].int, 10),
+    volume : parseInt(data.args[6].int, 10)
+  }
+}
+
 exports.oracle = oracle
 
 exports.sign_update_data = async (key, data, account) => {
@@ -191,17 +208,4 @@ exports.sign_update_data = async (key, data, account) => {
   const packed = packTyped(value, type)
   const signed = await sign(packed, { as: account.name })
   return signed.prefixSig
-}
-
-exports.get_asset_value_oracleData = async (contract, key) => {
-  const storage = await getStorage
-  return {
-    start  : 1,
-    end    : 2,
-    open   : 3,
-    high   : 4,
-    low    : 5,
-    close  : 6,
-    volume : 7
-  }
 }
