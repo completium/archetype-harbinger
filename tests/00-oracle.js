@@ -52,9 +52,11 @@ describe('[Oracle] Update once with valid data', async () => {
   it('Update Oracle', async () => {
     const asset = "XTZ-USD"
     const data  = make_update_data(1, 2, 3, 4, 5, 6, 7)
-    const sig   = sign_update_data(asset, data, alice)
+    const sig   = await sign_update_data(asset, data, alice)
+    console.log(sig)
+    console.log(alice.pubk)
     await oracle.update({
-      argMichelson: `{ Elt "${asset}" (Pair "${sig}" "${data}") }`,
+      argMichelson: `{ Elt "${asset}" (Pair "${sig}" (${data})) }`,
       as: alice.pkh,
     });
   })

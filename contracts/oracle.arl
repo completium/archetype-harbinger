@@ -31,7 +31,7 @@ entry update(upm : map<asset_key<oracleData>, (signature * asset_value<oracleDat
     for (k, newData) in upm do
       if oracleData.contains(k) and newData[1].start > oracleData[k].start then  begin
         const packed = pack((k, newData[1]));
-        do_require(check_signature(publickey, newData[0], packed), INVALID_SIG);
+        do_require(check_signature(publickey, newData[0], packed), (INVALID_SIG, (publickey, newData[0], packed)));
         oracleData.put(make_asset<oracleData>(k, newData[1]))
       end
     done
