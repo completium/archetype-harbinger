@@ -31,47 +31,47 @@ exports.make_map = l => {
   })
 }
 
-// ORACLE objects
+// ORACLE objects -------------------------------------------------------------
 
-exports.make_asset_value_oracleData = (start, end, open, high, low, close, volume) => {
+exports.make_asset_value_oracleData = (asset_value_oracle) => {
   return  {
     "prim": "Pair",
     "args": [
       {
-        "int": `${start}`
+        "int": `${asset_value_oracle.start}`
       },
       {
         "prim": "Pair",
         "args": [
           {
-            "int": `${end}`
+            "int": `${asset_value_oracle.end}`
           },
           {
             "prim": "Pair",
             "args": [
               {
-                "int": `${open}`
+                "int": `${asset_value_oracle.open}`
               },
               {
                 "prim": "Pair",
                 "args": [
                   {
-                    "int": `${high}`
+                    "int": `${asset_value_oracle.high}`
                   },
                   {
                     "prim": "Pair",
                     "args": [
                       {
-                        "int": `${low}`
+                        "int": `${asset_value_oracle.low}`
                       },
                       {
                         "prim": "Pair",
                         "args": [
                           {
-                            "int": `${close}`
+                            "int": `${asset_value_oracle.close}`
                           },
                           {
-                            "int": `${volume}`
+                            "int": `${asset_value_oracle.volume}`
                           }
                         ]
                       }
@@ -161,12 +161,34 @@ exports.asset_value_oracleData_type = {
 }
 
 exports.make_update_upm_key = a => this.make_string(a)
-exports.make_update_upm_value = (a, b) => this.make_pair(this.make_string(a), b)
+exports.make_update_upm_value = (a, b) => this.make_pair(this.make_string(a), this.make_asset_value_oracleData(b))
+exports.make_update_upm = l => {
+  return this.make_map(l.map(x => {
+    return {
+      key   : this.make_string(x.key),
+      value : this.make_pair(this.make_string(x.value[0]), this.make_asset_value_oracleData(x.value[1]))
+    }
+  }))
+}
+
+// Utils ----------------------------------------------------------------------
 
 exports.sign_update_data = async (key, data, account) => {
-  const value = this.make_pair(key, data)
+  const value = this.make_pair(this.make_string(key), this.make_asset_value_oracleData(data))
   const type  = this.make_pair_type(this.string_type, this.asset_value_oracleData_type)
   const packed = packTyped(value, type)
   const signed = await sign(packed, { as: account.name })
   return signed.prefixSig
+}
+
+exports.get_asset_value_oracleData = async (key) => {
+  return {
+    start  : 1,
+    end    : 2,
+    open   : 3,
+    high   : 4,
+    low    : 5,
+    close  : 6,
+    volume : 7
+  }
 }
