@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "description": "Archetype version of Harbinger oracle contracts",
   "scripts": {
-    "test": "mocha --timeout 0 --slow 99999999999999999 ./tests/*.js",
-    "test-oracle": "mocha --timeout 0 --slow 99999999999999999 ./tests/00-oracle.js"
+    "build": "npx tsc --outDir build",
+    "test": "mocha --timeout 0 --slow 99999999999999999 ./build/tests/*.js",
+    "test-oracle": "mocha --timeout 0 --slow 99999999999999999 ./build/tests/00-oracle.js"
   },
   "repository": {
     "type": "git",
@@ -25,5 +26,9 @@
   "dependencies": {
     "@completium/completium-cli": "^0.4.3",
     "mocha": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/mocha": "^9.1.1",
+    "typescript": "^4.7.4"
   }
 }

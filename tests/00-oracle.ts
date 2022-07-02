@@ -7,13 +7,22 @@ const {
   setEndpoint,
   setMockupNow,
   setQuiet,
-} = require('@completium/completium-cli');
-const oracle = require('./oracle');
-const {
-  sign_oracle_data,
-  sign_oracle_revoke,
-} = require('./utils')
-const assert = require('assert');
+  packTyped,
+  sign
+} = require('@completium/completium-cli')
+
+import {
+  oracle,
+  oracleData,
+  cmp_oracleData,
+  states,
+  make_asset_value_oracleData,
+  asset_value_oracleData_type
+} from './oracle'
+
+const Micheline = require('./micheline')
+
+const assert = require('assert')
 
 /* Accounts ---------------------------------------------------------------- */
 
@@ -33,55 +42,73 @@ setQuiet(true);
 const now = Math.floor(Date.now() / 1000)
 setMockupNow(now)
 
+/* Utils ------------------------------------------------------------------- */
+
+const sign_oracle_data = async (key : string, data : oracleData, account : any) => {
+  const value = Micheline.make_pair(Micheline.make_string(key), make_asset_value_oracleData(data))
+  const type  = Micheline.make_pair_type(Micheline.string_type, asset_value_oracleData_type)
+  const packed = packTyped(value, type)
+  const signed = await sign(packed, { as: account.name })
+  return signed.prefixSig
+}
+
+const sign_oracle_revoke = async (account : any) => {
+  const value = Micheline.none;
+  const type  = Micheline.make_option_type(Micheline.key_type)
+  const packed = packTyped(value, type)
+  const signed = await sign(packed, { as: account.name })
+  return signed.prefixSig
+}
+
 /* Data -------------------------------------------------------------------- */
 
 const asset1          = "XTZ-USD"
 const asset2          = "BTC-USD"
 const asset_untracked = "XTZ-BTC"
-const input1  = {
+const input1 : oracleData = {
   start  : '1970-01-01T00:00:01Z',
   end    : '1970-01-01T00:00:02Z',
-  open   : 3,
-  high   : 4,
-  low    : 5,
-  close  : 6,
-  volume : 7
+  open   : BigInt(3),
+  high   : BigInt(4),
+  low    : BigInt(5),
+  close  : BigInt(6),
+  volume : BigInt(7)
 }
-const input2  = {
+const input2 : oracleData  = {
   start  : '1970-01-01T00:00:08Z',
   end    : '1970-01-01T00:00:09Z',
-  open   : 10,
-  high   : 11,
-  low    : 12,
-  close  : 13,
-  volume : 14
+  open   : BigInt(10),
+  high   : BigInt(11),
+  low    : BigInt(12),
+  close  : BigInt(13),
+  volume : BigInt(14)
 }
-const input_past  = {
+const input_past : oracleData  = {
   start  : '1970-01-01T00:00:08Z',
   end    : '1970-01-01T00:00:09Z',
-  open   : 15,
-  high   : 16,
-  low    : 17,
-  close  : 18,
-  volume : 19
+  open   : BigInt(15),
+  high   : BigInt(16),
+  low    : BigInt(17),
+  close  : BigInt(18),
+  volume : BigInt(19)
 }
-const input3 = {
+const input3 : oracleData = {
   start  : '1970-01-01T00:00:15Z',
   end    : '1970-01-01T00:00:16Z',
-  open   : 17,
-  high   : 18,
-  low    : 19,
-  close  : 20,
-  volume : 21
+  open   : BigInt(17),
+  high   : BigInt(18),
+  low    : BigInt(19),
+  close  : BigInt(20),
+  volume : BigInt(21)
 }
-const input4 = {
+const input4 : oracleData = {
   start  : '1970-01-01T00:00:22Z',
   end    : '1970-01-01T00:00:23Z',
-  open   : 24,
-  high   : 25,
-  low    : 26,
-  close  : 27,
-  volume : 28
+  open   : BigInt(24),
+  high   : BigInt(25),
+  low    : BigInt(26),
+  close  : BigInt(27),
+  volume : BigInt(28)
 }
 
 /* Scenario ---------------------------------------------------------------- */
@@ -103,32 +130,32 @@ describe('[Oracle] Contract deployment', async () => {
 describe('[Oracle] Update', async () => {
   it('Update once with valid data', async () => {
     const sig = await sign_oracle_data(asset1, input1, alice)
-    await oracle.update([ { key: asset1, value: [ sig, input1 ] } ], {
-      as: alice.pkh
+    await oracle.update([ { key: asset1, value: { _1 : sig, _2 : input1 } } ], {
+      as: alice.pkh, amount: BigInt(0)
     })
     const output = await oracle.get_oracleData(asset1);
-    assert(JSON.stringify(output, 0, 2) == JSON.stringify(input1, 0, 2))
+    (output != undefined) ? assert(cmp_oracleData(output, input1)) : assert(false)
   })
   it('Second Update Overwrites First Update', async () => {
     const sig = await sign_oracle_data(asset1, input2, alice)
-    await oracle.update([ { key: asset1, value: [ sig, input2 ] } ], {
-      as: alice.pkh
+    await oracle.update([ { key: asset1, value: { _1: sig, _2: input2 } } ], {
+      as: alice.pkh, amount: BigInt(0)
     })
     const output = await oracle.get_oracleData(asset1);
-    assert(JSON.stringify(output, 0, 2) == JSON.stringify(input2, 0, 2))
+    (output != undefined) ? assert(cmp_oracleData(output, input2)) : assert(false)
   })
   it('Correctly Processes Updates With Data From The Past', async () => {
     const sig = await sign_oracle_data(asset1, input_past, alice)
-    await oracle.update([ { key: asset1, value: [ sig, input_past ] } ], {
-      as: alice.pkh
+    await oracle.update([ { key: asset1, value: { _1: sig, _2: input_past } } ], {
+      as: alice.pkh, amount: BigInt(0)
     })
     const output = await oracle.get_oracleData(asset1);
-    assert(JSON.stringify(output, 0, 2) == JSON.stringify(input2, 0, 2))
+    (output != undefined) ? assert(cmp_oracleData(output, input2)) : assert(false)
   })
   it('Untracked Asset does not update oracle', async () => {
     const sig = await sign_oracle_data(asset_untracked, input1, alice)
-    await oracle.update([ { key: asset_untracked, value: [ sig, input1 ] } ], {
-      as: alice.pkh
+    await oracle.update([ { key: asset_untracked, value: { _1: sig, _2: input1 } } ], {
+      as: alice.pkh, amount: BigInt(0)
     })
     const output = await oracle.get_oracleData(asset_untracked);
     assert(output == undefined)
@@ -136,8 +163,8 @@ describe('[Oracle] Update', async () => {
   it('Update Fails With Bad Signature', async () => {
     const sig = await sign_oracle_data(asset1, input3, bob)
     expectToThrow(async () => {
-      await oracle.update([ { key: asset1, value: [ sig, input3 ] } ], {
-        as: alice.pkh
+      await oracle.update([ { key: asset1, value: { _1: sig, _2: input3 } } ], {
+        as: alice.pkh, amount: BigInt(0)
       })
     }, oracle.errors.INVALID_SIG)
   })
@@ -145,26 +172,26 @@ describe('[Oracle] Update', async () => {
     const sig1 = await sign_oracle_data(asset1, input3, alice)
     const sig2 = await sign_oracle_data(asset2, input1, alice)
     await oracle.update([
-      { key: asset1, value: [ sig1, input3 ] },
-      { key: asset2, value: [ sig2, input1 ] },
+      { key: asset1, value: { _1: sig1, _2: input3 } },
+      { key: asset2, value: { _1: sig2, _2: input1 } },
     ], {
-      as: alice.pkh
+      as: alice.pkh, amount: BigInt(0)
     })
     const output1 = await oracle.get_oracleData(asset1);
-    assert(JSON.stringify(output1, 0, 2) == JSON.stringify(input3, 0, 2))
+    (output1 != undefined) ? assert(cmp_oracleData(output1, input3)) : assert(false)
     const output2 = await oracle.get_oracleData(asset2);
-    assert(JSON.stringify(output2, 0, 2) == JSON.stringify(input1, 0, 2))
+    (output2 != undefined) ? assert(cmp_oracleData(output2, input1)) : assert(false)
     const sig3 = await sign_oracle_data(asset1, input4, alice)
     await oracle.update([
-      { key: asset1, value: [ sig3, input4 ] },
-      { key: asset2, value: [ sig2, input1 ] },
+      { key: asset1, value: { _1: sig3, _2: input4 } },
+      { key: asset2, value: { _1: sig2, _2: input1 } },
     ], {
-      as: alice.pkh
+      as: alice.pkh, amount: BigInt(0)
     })
     const output3 = await oracle.get_oracleData(asset1);
-    assert(JSON.stringify(output3, 0, 2) == JSON.stringify(input4, 0, 2))
+    (output3 != undefined) ? assert(cmp_oracleData(output3, input4)) : assert(false)
     const output4 = await oracle.get_oracleData(asset2);
-    assert(JSON.stringify(output4, 0, 2) == JSON.stringify(input1, 0, 2))
+    (output4 != undefined) ? assert(cmp_oracleData(output4, input1)) : assert(false)
   })
 })
 
@@ -173,25 +200,25 @@ describe('[Oracle] Revoke', async () => {
     const sig = await sign_oracle_revoke(bob)
     expectToThrow(async () => {
       await oracle.revoke(sig, {
-        as : alice.pkh
+        as : alice.pkh, amount: BigInt(0)
       })
     }, oracle.errors.INVALID_SIG)
   })
   it('Revoke Oracle', async () => {
     const sig = await sign_oracle_revoke(alice)
     await oracle.revoke(sig, {
-      as : alice.pkh
+      as : alice.pkh, amount: BigInt(0)
     })
     const state = await oracle.get_state()
-    assert(state == oracle.states.Revoked)
+    assert(state == states.Revoked)
     const output = await oracle.get_oracleData(asset1);
     assert(output == undefined)
   })
   it('Update Fails when Revoked', async () => {
     const sig = await sign_oracle_data(asset1, input3, alice)
     expectToThrow(async () => {
-      await oracle.update([ { key: asset1, value: [ sig, input3 ] } ], {
-        as: alice.pkh
+      await oracle.update([ { key: asset1, value: { _1: sig, _2: input3 } } ], {
+        as: alice.pkh, amount: BigInt(0)
       })
     }, oracle.errors.REVOKED)
   })
