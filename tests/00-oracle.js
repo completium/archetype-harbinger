@@ -12,7 +12,7 @@ const {
   oracle,
   sign_oracle_data,
   sign_oracle_revoke,
-  oracle_state,
+  states,
   errors
 } = require('./oracle');
 const assert = require('assert');
@@ -185,7 +185,7 @@ describe('[Oracle] Revoke', async () => {
       as : alice.pkh
     })
     const state = await oracle.get_state()
-    assert(state == oracle_state.Revoked)
+    assert(state == states.Revoked)
     const output = await oracle.get_oracleData(asset1);
     assert(output == undefined)
   })

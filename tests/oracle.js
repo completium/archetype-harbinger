@@ -196,7 +196,7 @@ oracle.get_oracleData = async key => {
   }
 }
 
-exports.oracle_state = {
+exports.states = {
   Running : 0,
   Revoked : 1
 }
@@ -205,9 +205,9 @@ oracle.get_state = async () => {
   const storage = await oracle.contract.getStorage()
   const state = storage._state
   if (state.toNumber() == 0) {
-    return this.oracle_state.Running
+    return this.oracle_states.Running
   } else {
-    return this.oracle_state.Revoked
+    return this.oracle_states.Revoked
   }
 }
 
