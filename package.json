@@ -1,0 +1,29 @@
+{
+  "name": "archetype-harbinger",
+  "version": "1.0.0",
+  "description": "Archetype version of Harbinger oracle contracts",
+  "scripts": {
+    "test": "mocha --timeout 0 --slow 99999999999999999 ./tests/*.js",
+    "test-oracle": "mocha --timeout 0 --slow 99999999999999999 ./tests/00-oracle.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/completium/archetype-harbinger.git"
+  },
+  "keywords": [
+    "tezos",
+    "harbinger",
+    "oracle",
+    "archetype"
+  ],
+  "author": "Completium",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/completium/archetype-harbinger/issues"
+  },
+  "homepage": "https://github.com/completium/archetype-harbinger#readme",
+  "dependencies": {
+    "@completium/completium-cli": "^0.4.3",
+    "mocha": "^10.0.0"
+  }
+}

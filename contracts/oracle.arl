@@ -10,7 +10,7 @@ asset oracleData to big_map {
   close    : nat;
   volume   : nat
 } initialized by {
-  { "XTZ-USDT"; int_to_date(0); int_to_date(0); 0; 0; 0; 0; 0 }
+  { "XTZ-USD"; int_to_date(0); int_to_date(0); 0; 0; 0; 0; 0 }
 }
 
 states =

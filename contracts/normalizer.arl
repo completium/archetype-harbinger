@@ -43,7 +43,7 @@ record update_param {
 }
 
 // Called by oracle's 'push' entrypoint
-entry update(upm : map<asset_key<assetMap>, update_param>) {
+entry update(upm : big_map<asset_key<assetMap>, update_param>) {
   called by oracleContract otherwise INVALID_CALLER
   effect {
     for assetcode in assetCodes do
