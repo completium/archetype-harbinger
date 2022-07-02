@@ -205,9 +205,9 @@ oracle.get_state = async () => {
   const storage = await oracle.contract.getStorage()
   const state = storage._state
   if (state.toNumber() == 0) {
-    return this.oracle_states.Running
+    return this.states.Running
   } else {
-    return this.oracle_states.Revoked
+    return this.states.Revoked
   }
 }
 
