@@ -191,21 +191,21 @@ export enum states {
 
 export class Oracle {
   contract : any
-  async update (a : Array<upm_pair> , p : parameters) : Promise<any> {
+  async update (a : Array<upm_pair> , p : Partial<parameters>) : Promise<any> {
     if (this.contract != undefined) {
       await this.contract.update({
         argJsonMichelson: make_update_upm(a),
         as: p.as,
-        amount: p.amount.toString()+"utz"
+        amount: p.amount ? p.amount.toString()+"utz" : undefined
       });
     }
   }
-  async revoke(a : string, p : parameters) : Promise<any> {
+  async revoke(a : string, p : Partial<parameters>) : Promise<any> {
     if (this.contract != undefined) {
       await this.contract.revoke({
         argJsonMichelson: Micheline.make_string(a),
         as: p.as,
-        amount: p.amount.toString()+"utz"
+        amount: p.amount ? p.amount.toString()+"utz" : undefined
       });
     }
   }

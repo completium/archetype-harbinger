@@ -131,7 +131,7 @@ describe('[Oracle] Update', async () => {
   it('Update once with valid data', async () => {
     const sig = await sign_oracle_data(asset1, input1, alice)
     await oracle.update([ { key: asset1, value: { _1 : sig, _2 : input1 } } ], {
-      as: alice.pkh, amount: BigInt(0)
+      as: alice.pkh
     })
     const output = await oracle.get_oracleData(asset1);
     (output != undefined) ? assert(cmp_oracleData(output, input1)) : assert(false)
@@ -139,7 +139,7 @@ describe('[Oracle] Update', async () => {
   it('Second Update Overwrites First Update', async () => {
     const sig = await sign_oracle_data(asset1, input2, alice)
     await oracle.update([ { key: asset1, value: { _1: sig, _2: input2 } } ], {
-      as: alice.pkh, amount: BigInt(0)
+      as: alice.pkh
     })
     const output = await oracle.get_oracleData(asset1);
     (output != undefined) ? assert(cmp_oracleData(output, input2)) : assert(false)
@@ -147,7 +147,7 @@ describe('[Oracle] Update', async () => {
   it('Correctly Processes Updates With Data From The Past', async () => {
     const sig = await sign_oracle_data(asset1, input_past, alice)
     await oracle.update([ { key: asset1, value: { _1: sig, _2: input_past } } ], {
-      as: alice.pkh, amount: BigInt(0)
+      as: alice.pkh
     })
     const output = await oracle.get_oracleData(asset1);
     (output != undefined) ? assert(cmp_oracleData(output, input2)) : assert(false)
@@ -155,7 +155,7 @@ describe('[Oracle] Update', async () => {
   it('Untracked Asset does not update oracle', async () => {
     const sig = await sign_oracle_data(asset_untracked, input1, alice)
     await oracle.update([ { key: asset_untracked, value: { _1: sig, _2: input1 } } ], {
-      as: alice.pkh, amount: BigInt(0)
+      as: alice.pkh
     })
     const output = await oracle.get_oracleData(asset_untracked);
     assert(output == undefined)
@@ -164,7 +164,7 @@ describe('[Oracle] Update', async () => {
     const sig = await sign_oracle_data(asset1, input3, bob)
     expectToThrow(async () => {
       await oracle.update([ { key: asset1, value: { _1: sig, _2: input3 } } ], {
-        as: alice.pkh, amount: BigInt(0)
+        as: alice.pkh
       })
     }, oracle.errors.INVALID_SIG)
   })
@@ -175,7 +175,7 @@ describe('[Oracle] Update', async () => {
       { key: asset1, value: { _1: sig1, _2: input3 } },
       { key: asset2, value: { _1: sig2, _2: input1 } },
     ], {
-      as: alice.pkh, amount: BigInt(0)
+      as: alice.pkh
     })
     const output1 = await oracle.get_oracleData(asset1);
     (output1 != undefined) ? assert(cmp_oracleData(output1, input3)) : assert(false)
@@ -186,7 +186,7 @@ describe('[Oracle] Update', async () => {
       { key: asset1, value: { _1: sig3, _2: input4 } },
       { key: asset2, value: { _1: sig2, _2: input1 } },
     ], {
-      as: alice.pkh, amount: BigInt(0)
+      as: alice.pkh
     })
     const output3 = await oracle.get_oracleData(asset1);
     (output3 != undefined) ? assert(cmp_oracleData(output3, input4)) : assert(false)
@@ -200,14 +200,14 @@ describe('[Oracle] Revoke', async () => {
     const sig = await sign_oracle_revoke(bob)
     expectToThrow(async () => {
       await oracle.revoke(sig, {
-        as : alice.pkh, amount: BigInt(0)
+        as : alice.pkh
       })
     }, oracle.errors.INVALID_SIG)
   })
   it('Revoke Oracle', async () => {
     const sig = await sign_oracle_revoke(alice)
     await oracle.revoke(sig, {
-      as : alice.pkh, amount: BigInt(0)
+      as : alice.pkh
     })
     const state = await oracle.get_state()
     assert(state == states.Revoked)
@@ -218,7 +218,7 @@ describe('[Oracle] Revoke', async () => {
     const sig = await sign_oracle_data(asset1, input3, alice)
     expectToThrow(async () => {
       await oracle.update([ { key: asset1, value: { _1: sig, _2: input3 } } ], {
-        as: alice.pkh, amount: BigInt(0)
+        as: alice.pkh
       })
     }, oracle.errors.REVOKED)
   })
