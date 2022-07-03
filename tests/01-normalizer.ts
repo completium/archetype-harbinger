@@ -7,17 +7,11 @@ const {
   setEndpoint,
   setMockupNow,
   setQuiet,
-  packTyped,
-  sign
 } = require('@completium/completium-cli')
 
 import {
   oracle,
   oracleData,
-  cmp_oracleData,
-  states,
-  oracleData_to_json,
-  oracleData_type
 } from './oracle'
 
 import {
@@ -30,13 +24,6 @@ import {
 } from './normalizer'
 
 import {
- pair_to_json,
- pair_type_to_json,
- string_to_json,
- string_type_json,
- none_json,
- option_type_to_json,
- key_type_json,
  Entrypoint
 } from './micheline'
 
