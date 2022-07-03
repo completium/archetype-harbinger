@@ -20,7 +20,7 @@ function push(q : queue, v : nat) : queue {
   const new_first = q.first + (pop ? 1 : 0);
   const new_last  = q.last + 1;
   const new_sum  ?= int_to_nat(q.sum + v - (pop ? (q.saved[q.first] ? the : 0) : 0)) : INVALID_SUM;
-  const new_saved = put(pop ? remove(q.saved, q.first): q.saved, q.last, v);
+  const new_saved = put(pop ? remove(q.saved, q.first): q.saved, new_last, v);
   return { new_first; new_last; new_sum; new_saved }
 }
 
