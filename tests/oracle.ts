@@ -271,13 +271,13 @@ export class Oracle {
         string_type_json)
       if (data != undefined) {
         return {
-            start  : data.args[0].string,
-            end    : data.args[1].string,
-            open   : BigInt(data.args[2].int),
-            high   : BigInt(data.args[3].int),
-            low    : BigInt(data.args[4].int),
-            close  : BigInt(data.args[5].int),
-            volume : BigInt(data.args[6].int)
+          start  : data.args[0].string,
+          end    : data.args[1].string,
+          open   : BigInt(data.args[2].int),
+          high   : BigInt(data.args[3].int),
+          low    : BigInt(data.args[4].int),
+          close  : BigInt(data.args[5].int),
+          volume : BigInt(data.args[6].int)
         }
       } else {
         return undefined
