@@ -1,3 +1,9 @@
+
+export interface parameters {
+  as     : string,
+  amount : bigint
+}
+
 export const string_type_json = {
   prim: "string"
 }
@@ -31,3 +37,17 @@ export const map_to_json = (l : Array<any>) => {
     return elt_to_json(x.key, x.value)
   })
 }
+
+export class Entrypoint {
+  addr : string
+  name : string
+  constructor(a : string, n : string) {
+    this.addr = a
+    this.name =n
+  }
+  to_json() {
+    return string_to_json(this.addr+"%"+this.name)
+  }
+}
+
+

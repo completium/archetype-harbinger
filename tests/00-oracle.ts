@@ -53,7 +53,7 @@ setMockupNow(now)
 
 /* Utils ------------------------------------------------------------------- */
 
-const sign_oracle_data = async (key : string, data : oracleData, account : any) => {
+export const sign_oracle_data = async (key : string, data : oracleData, account : any) => {
   const value = pair_to_json(string_to_json(key), oracleData_to_json(data))
   const type  = pair_type_to_json(string_type_json, oracleData_type)
   const packed = packTyped(value, type)
@@ -61,7 +61,7 @@ const sign_oracle_data = async (key : string, data : oracleData, account : any) 
   return signed.prefixSig
 }
 
-const sign_oracle_revoke = async (account : any) => {
+export const sign_oracle_revoke = async (account : any) => {
   const value = none_json;
   const type  = option_type_to_json(key_type_json)
   const packed = packTyped(value, type)
@@ -71,8 +71,8 @@ const sign_oracle_revoke = async (account : any) => {
 
 /* Data -------------------------------------------------------------------- */
 
-const asset1          = "XTZ-USD"
-const asset2          = "BTC-USD"
+export const asset1          = "XTZ-USD"
+export const asset2          = "BTC-USD"
 const asset_untracked = "XTZ-BTC"
 const input1 : oracleData = {
   start  : '1970-01-01T00:00:01Z',

@@ -4,21 +4,12 @@ const Completium = require('@completium/completium-cli');
 
 import {
   pair_to_json,
-  pair_type_to_json,
   string_to_json,
   string_type_json,
-  none_json,
-  option_type_to_json,
-  key_type_json,
-  map_to_json
+  map_to_json,
+  parameters,
+  Entrypoint
  } from './micheline'
-
- /* Params ------------------------------------------------------------------ */
-
-interface parameters {
-  as     : string,
-  amount : bigint
-}
 
 /* OracleData -------------------------------------------------------------- */
 
@@ -222,37 +213,52 @@ export enum states {
   Running = 1,
   Revoked,
 }
-/* module interface */
+/* Oracle ------------------------------------------------------------------ */
 
 export class Oracle {
   contract : any
-  async deploy(publickey : string,  p : Partial<parameters>, oracleData_lit ?: oracleData_literal) {
+  get_address() : string | undefined {
+    if (this.contract != undefined) {
+      return this.contract.address
+    }
+    return undefined
+  }
+  async deploy(publickey : string,  params : Partial<parameters>, oracleData_lit ?: oracleData_literal) {
     const [oracle_contract, _] = await Completium.deploy(
       './contracts/oracle.arl', {
         parameters: {
           publickey: publickey,
         },
-        as: p.as,
-        amount: p.amount ? p.amount.toString()+"utz" : undefined
+        as: params.as,
+        amount: params.amount ? params.amount.toString()+"utz" : undefined
       }
     )
     this.contract = oracle_contract
   }
-  async update (a : update_arg , p : Partial<parameters>) : Promise<any> {
+  async update (a : update_arg , params : Partial<parameters>) : Promise<any> {
     if (this.contract != undefined) {
       await this.contract.update({
         argJsonMichelson: update_upm_to_json(a),
-        as: p.as,
-        amount: p.amount ? p.amount.toString()+"utz" : undefined
+        as: params.as,
+        amount: params.amount ? params.amount.toString()+"utz" : undefined
       });
     }
   }
-  async revoke(a : string, p : Partial<parameters>) : Promise<any> {
+  async push(e : Entrypoint, params : Partial<parameters>) : Promise<any> {
+    if (this.contract != undefined) {
+      await this.contract.push({
+        argJsonMichelson: e.to_json(),
+        as: params.as,
+        amount: params.amount ? params.amount.toString()+"utz" : undefined
+      })
+    }
+  }
+  async revoke(a : string, params : Partial<parameters>) : Promise<any> {
     if (this.contract != undefined) {
       await this.contract.revoke({
         argJsonMichelson: string_to_json(a),
-        as: p.as,
-        amount: p.amount ? p.amount.toString()+"utz" : undefined
+        as: params.as,
+        amount: params.amount ? params.amount.toString()+"utz" : undefined
       });
     }
   }

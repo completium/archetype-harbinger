@@ -30,6 +30,9 @@ asset assetMap to big_map {
   lastUpdateTime : date = int_to_date(0);
   prices         : queue;
   volumes        : queue
+} initialized by {
+  { "XTZ-USD"; 0; int_to_date(0); { 0; (-1); 0; [ ] }; { 0; (-1); 0; [ ] } };
+  { "BTC-USD"; 0; int_to_date(0); { 0; (-1); 0; [ ] }; { 0; (-1); 0; [ ] } }
 }
 
 record update_param {
