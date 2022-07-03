@@ -1,9 +1,19 @@
 /* Imports ----------------------------------------------------------------- */
 
 const Completium = require('@completium/completium-cli');
-const Micheline  = require('./micheline')
 
-/* Params ------------------------------------------------------------------ */
+import {
+  pair_to_json,
+  pair_type_to_json,
+  string_to_json,
+  string_type_json,
+  none_json,
+  option_type_to_json,
+  key_type_json,
+  map_to_json
+ } from './micheline'
+
+ /* Params ------------------------------------------------------------------ */
 
 interface parameters {
   as     : string,
@@ -26,7 +36,7 @@ export const cmp_oracleData = (a : oracleData, b : oracleData) => {
   return a.start == b.start && a.end == b.end && a.open == b.open && a.high == b.high && a.low == b.low && a.close == b.close && a.volume == b.volume
 }
 
-export const make_asset_value_oracleData = (v : oracleData) => {
+export const oracleData_to_json = (v : oracleData) => {
   return  {
     "prim": "Pair",
     "args": [
@@ -80,7 +90,7 @@ export const make_asset_value_oracleData = (v : oracleData) => {
   }
 }
 
-export const asset_value_oracleData_type = {
+export const oracleData_type = {
   "prim": "pair",
   "args": [
     {
@@ -153,32 +163,57 @@ export const asset_value_oracleData_type = {
   ]
 }
 
-/* Update ------------------------------------------------------------------ */
+export interface oracleData_elt {
+  key: string,
+  value: oracleData
+}
 
-const cmp = (a : upm_pair,b : upm_pair) => {
+export type oracleData_literal = Array<oracleData_elt>
+
+const cmp_oracleData_elt = (a : oracleData_elt,b : oracleData_elt) => {
   if (a.key === b.key) {
     return 0;
   }
   return a.key < b.key ? -1 : 1;
 };
 
-const make_update_upm = (l : Array<upm_pair>) => {
-  return Micheline.make_map(l.sort(cmp).map(x => {
+export const oracleData_literal_to_json = (l : oracleData_literal) => {
+  return map_to_json(l.sort(cmp_oracleData_elt).map(x => {
     return {
-      key   : Micheline.make_string(x.key),
-      value : Micheline.make_pair(Micheline.make_string(x.value._1), make_asset_value_oracleData(x.value._2))
+      key   : string_to_json(x.key),
+      value : oracleData_to_json(x.value)
     }
-  }), cmp)
+  }))
 }
+
+/* Update ------------------------------------------------------------------ */
 
 export interface upm_value {
   _1 : string,
   _2 : oracleData
 }
 
-export interface upm_pair {
+export interface upm_elt {
   key   : string,
   value : upm_value;
+}
+
+export type update_arg = Array<upm_elt>
+
+const cmp_upm_elt = (a : upm_elt,b : upm_elt) => {
+  if (a.key === b.key) {
+    return 0;
+  }
+  return a.key < b.key ? -1 : 1;
+};
+
+const update_upm_to_json = (l : update_arg) => {
+  return map_to_json(l.sort(cmp_upm_elt).map(x => {
+    return {
+      key   : string_to_json(x.key),
+      value : pair_to_json(string_to_json(x.value._1), oracleData_to_json(x.value._2))
+    }
+  }))
 }
 
 /* state ------------------------------------------------------------------- */
@@ -191,10 +226,22 @@ export enum states {
 
 export class Oracle {
   contract : any
-  async update (a : Array<upm_pair> , p : Partial<parameters>) : Promise<any> {
+  async deploy(publickey : string,  p : Partial<parameters>, oracleData_lit ?: oracleData_literal) {
+    const [oracle_contract, _] = await Completium.deploy(
+      './contracts/oracle.arl', {
+        parameters: {
+          publickey: publickey,
+        },
+        as: p.as,
+        amount: p.amount ? p.amount.toString()+"utz" : undefined
+      }
+    )
+    this.contract = oracle_contract
+  }
+  async update (a : update_arg , p : Partial<parameters>) : Promise<any> {
     if (this.contract != undefined) {
       await this.contract.update({
-        argJsonMichelson: make_update_upm(a),
+        argJsonMichelson: update_upm_to_json(a),
         as: p.as,
         amount: p.amount ? p.amount.toString()+"utz" : undefined
       });
@@ -203,7 +250,7 @@ export class Oracle {
   async revoke(a : string, p : Partial<parameters>) : Promise<any> {
     if (this.contract != undefined) {
       await this.contract.revoke({
-        argJsonMichelson: Micheline.make_string(a),
+        argJsonMichelson: string_to_json(a),
         as: p.as,
         amount: p.amount ? p.amount.toString()+"utz" : undefined
       });
@@ -214,8 +261,8 @@ export class Oracle {
       const storage = await this.contract.getStorage()
       const data = await Completium.getValueFromBigMap(
         parseInt(storage.oracleData),
-        Micheline.make_string(key),
-        Micheline.string_type)
+        string_to_json(key),
+        string_type_json)
       if (data != undefined) {
         return {
             start  : data.args[0].string,
@@ -242,9 +289,6 @@ export class Oracle {
       }
     }
     return states.Running
-  }
-  set_contract = (c : any) => {
-    this.contract = c
   }
   errors = {
     INVALID_SIG : "bad sig",

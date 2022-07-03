@@ -1,16 +1,16 @@
-export const string_type = {
+export const string_type_json = {
   prim: "string"
 }
 
-export const key_type = {
+export const key_type_json = {
   prim: "key"
 }
 
-export const none = {
+export const none_json = {
   "prim": "None"
 }
 
-export const make_string = (v : string) => {
+export const string_to_json = (v : string) => {
   return { "string" : v }
 }
 
@@ -21,13 +21,13 @@ export const make_prim = (p : string, a : Array<any>) => {
   }
 }
 
-export const make_elt       = (a : any, b : any) => make_prim("Elt",  [ a, b ])
-export const make_pair      = (a : any, b : any) => make_prim("Pair", [ a, b ])
-export const make_pair_type = (a : any, b : any) => make_prim("pair", [ a, b ])
-export const make_option_type = (a : any)        => make_prim("option", [ a ] )
+export const elt_to_json       = (a : any, b : any) => make_prim("Elt",  [ a, b ])
+export const pair_to_json      = (a : any, b : any) => make_prim("Pair", [ a, b ])
+export const pair_type_to_json = (a : any, b : any) => make_prim("pair", [ a, b ])
+export const option_type_to_json = (a : any)        => make_prim("option", [ a ] )
 
-exports.make_map = (l : Array<any>) => {
+export const map_to_json = (l : Array<any>) => {
   return l.map(x => {
-    return make_elt(x.key, x.value)
+    return elt_to_json(x.key, x.value)
   })
 }

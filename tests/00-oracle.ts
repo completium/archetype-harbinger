@@ -16,11 +16,20 @@ import {
   oracleData,
   cmp_oracleData,
   states,
-  make_asset_value_oracleData,
-  asset_value_oracleData_type
+  oracleData_to_json,
+  oracleData_type
 } from './oracle'
 
-const Micheline = require('./micheline')
+import {
+ pair_to_json,
+ pair_type_to_json,
+ string_to_json,
+ string_type_json,
+ none_json,
+ option_type_to_json,
+ key_type_json
+} from './micheline'
+
 
 const assert = require('assert')
 
@@ -45,16 +54,16 @@ setMockupNow(now)
 /* Utils ------------------------------------------------------------------- */
 
 const sign_oracle_data = async (key : string, data : oracleData, account : any) => {
-  const value = Micheline.make_pair(Micheline.make_string(key), make_asset_value_oracleData(data))
-  const type  = Micheline.make_pair_type(Micheline.string_type, asset_value_oracleData_type)
+  const value = pair_to_json(string_to_json(key), oracleData_to_json(data))
+  const type  = pair_type_to_json(string_type_json, oracleData_type)
   const packed = packTyped(value, type)
   const signed = await sign(packed, { as: account.name })
   return signed.prefixSig
 }
 
 const sign_oracle_revoke = async (account : any) => {
-  const value = Micheline.none;
-  const type  = Micheline.make_option_type(Micheline.key_type)
+  const value = none_json;
+  const type  = option_type_to_json(key_type_json)
   const packed = packTyped(value, type)
   const signed = await sign(packed, { as: account.name })
   return signed.prefixSig
@@ -115,15 +124,7 @@ const input4 : oracleData = {
 
 describe('[Oracle] Contract deployment', async () => {
   it('Deploy Oracle', async () => {
-    const [oracle_contract, _] = await deploy(
-      './contracts/oracle.arl', {
-        parameters: {
-          publickey: alice.pubk,
-        },
-        as: alice.pkh,
-      }
-    )
-    oracle.set_contract(oracle_contract)
+    await oracle.deploy(alice.pubk, { as: alice.pkh })
   });
 })
 
@@ -199,16 +200,12 @@ describe('[Oracle] Revoke', async () => {
   it('Incorrect Revoke Fails to Revoke An Oracle', async () => {
     const sig = await sign_oracle_revoke(bob)
     expectToThrow(async () => {
-      await oracle.revoke(sig, {
-        as : alice.pkh
-      })
+      await oracle.revoke(sig, { as : alice.pkh })
     }, oracle.errors.INVALID_SIG)
   })
   it('Revoke Oracle', async () => {
     const sig = await sign_oracle_revoke(alice)
-    await oracle.revoke(sig, {
-      as : alice.pkh
-    })
+    await oracle.revoke(sig, { as : alice.pkh })
     const state = await oracle.get_state()
     assert(state == states.Revoked)
     const output = await oracle.get_oracleData(asset1);
