@@ -171,12 +171,12 @@ describe('[Normalizer] Contracts deployment', async () => {
 describe('[Normalizer] Update', async () => {
   it('Fails when data is pushed from bad address', async () => {
     expectToThrow(async () => {
-      await normalizer.update([ { key: "XTZ-USD", value: input0 } ], { as : alice.pkh })
+      await normalizer.update([ [ "XTZ-USD", input0 ] ], { as : alice.pkh })
     }, normalizer.errors.INVALID_CALLER)
   })
   it('Correctly processes updates', async () => {
     const sig1 = await sign_oracle_data(asset1, input1, alice)
-    await oracle.update([ { key: asset1, value: { _1 : sig1, _2 : input1 } } ], {
+    await oracle.update([ [ asset1, [ sig1, input1 ] ] ], {
       as: alice.pkh
     })
     await oracle.push(update_entry, { as : alice.pkh })
@@ -189,7 +189,7 @@ describe('[Normalizer] Update', async () => {
   })
   it('Update with same time does not update', async () => {
     const sig = await sign_oracle_data(asset1, input1_same_date, alice)
-    await oracle.update([ { key: asset1, value: { _1 : sig, _2 : input1_same_date } } ], {
+    await oracle.update([ [ asset1, [ sig, input1_same_date ] ] ], {
       as: alice.pkh
     })
     await oracle.push(update_entry, { as : alice.pkh })
@@ -203,7 +203,7 @@ describe('[Normalizer] Update', async () => {
   })
   it('Update with input2', async () => {
     const sig = await sign_oracle_data(asset1, input2, alice)
-    await oracle.update([ { key: asset1, value: { _1 : sig, _2 : input2 } } ], {
+    await oracle.update([ [ asset1, [ sig, input2 ] ] ], {
       as: alice.pkh
     })
     await oracle.push(update_entry, { as : alice.pkh })
@@ -217,7 +217,7 @@ describe('[Normalizer] Update', async () => {
   })
   it('Update with input3', async () => {
     const sig = await sign_oracle_data(asset1, input3, alice)
-    await oracle.update([ { key: asset1, value: { _1 : sig, _2 : input3 } } ], {
+    await oracle.update([ [ asset1, [ sig, input3 ] ] ], {
       as: alice.pkh
     })
     await oracle.push(update_entry, { as : alice.pkh })
@@ -231,7 +231,7 @@ describe('[Normalizer] Update', async () => {
   })
   it('Update with input4', async () => {
     const sig = await sign_oracle_data(asset1, input4, alice)
-    await oracle.update([ { key: asset1, value: { _1 : sig, _2 : input4 } } ], {
+    await oracle.update([ [ asset1, [ sig, input4 ] ] ], {
       as: alice.pkh
     })
     await oracle.push(update_entry, { as : alice.pkh })
@@ -245,7 +245,7 @@ describe('[Normalizer] Update', async () => {
   })
   it('Update with input5', async () => {
     const sig = await sign_oracle_data(asset1, input5, alice)
-    await oracle.update([ { key: asset1, value: { _1 : sig, _2 : input5 } } ], {
+    await oracle.update([ [ asset1, [ sig, input5 ] ] ], {
       as: alice.pkh
     })
     await oracle.push(update_entry, { as : alice.pkh })
@@ -259,7 +259,7 @@ describe('[Normalizer] Update', async () => {
   })
   it('Update with input6', async () => {
     const sig = await sign_oracle_data(asset1, input6, alice)
-    await oracle.update([ { key: asset1, value: { _1 : sig, _2 : input6 } } ], {
+    await oracle.update([ [ asset1, [ sig, input6 ] ] ], {
       as: alice.pkh
     })
     await oracle.push(update_entry, { as : alice.pkh })

@@ -7,6 +7,7 @@ import {
   string_to_json,
   string_type_json,
   map_to_json,
+  string_cmp,
   parameters,
   Entrypoint
  } from './micheline'
@@ -154,57 +155,14 @@ export const oracleData_type = {
   ]
 }
 
-export interface oracleData_elt {
-  key: string,
-  value: oracleData
-}
-
-export type oracleData_literal = Array<oracleData_elt>
-
-const cmp_oracleData_elt = (a : oracleData_elt,b : oracleData_elt) => {
-  if (a.key === b.key) {
-    return 0;
-  }
-  return a.key < b.key ? -1 : 1;
-};
-
-export const oracleData_literal_to_json = (l : oracleData_literal) => {
-  return map_to_json(l.sort(cmp_oracleData_elt).map(x => {
-    return {
-      key   : string_to_json(x.key),
-      value : oracleData_to_json(x.value)
-    }
-  }))
+export const oracleData_container_to_json = (c : Map<string, oracleData>) => {
+  return map_to_json(c, string_to_json, oracleData_to_json, string_cmp)
 }
 
 /* Update ------------------------------------------------------------------ */
 
-export interface upm_value {
-  _1 : string,
-  _2 : oracleData
-}
-
-export interface upm_elt {
-  key   : string,
-  value : upm_value;
-}
-
-export type update_arg = Array<upm_elt>
-
-const cmp_upm_elt = (a : upm_elt,b : upm_elt) => {
-  if (a.key === b.key) {
-    return 0;
-  }
-  return a.key < b.key ? -1 : 1;
-};
-
-const update_upm_to_json = (l : update_arg) => {
-  return map_to_json(l.sort(cmp_upm_elt).map(x => {
-    return {
-      key   : string_to_json(x.key),
-      value : pair_to_json(string_to_json(x.value._1), oracleData_to_json(x.value._2))
-    }
-  }))
+const update_arg_to_json = (l : Map< string, [ string, oracleData ]>) => {
+  return map_to_json(l, string_to_json, x => pair_to_json(string_to_json(x[0]), oracleData_to_json(x[1])), string_cmp)
 }
 
 /* state ------------------------------------------------------------------- */
@@ -223,7 +181,7 @@ export class Oracle {
     }
     return undefined
   }
-  async deploy(publickey : string,  params : Partial<parameters>, oracleData_lit ?: oracleData_literal) {
+  async deploy(publickey : string,  params : Partial<parameters>, oracleData_lit ?: Map<string, oracleData>) {
     const [oracle_contract, _] = await Completium.deploy(
       './contracts/oracle.arl', {
         parameters: {
@@ -235,10 +193,10 @@ export class Oracle {
     )
     this.contract = oracle_contract
   }
-  async update (a : update_arg , params : Partial<parameters>) : Promise<any> {
+  async update (a : Array< [ string, [ string, oracleData ] ]> , params : Partial<parameters>) : Promise<any> {
     if (this.contract != undefined) {
       await this.contract.update({
-        argJsonMichelson: update_upm_to_json(a),
+        argJsonMichelson: update_arg_to_json(new Map(a)),
         as: params.as,
         amount: params.amount ? params.amount.toString()+"utz" : undefined
       });

@@ -7,11 +7,7 @@ import {
   string_to_json,
   string_type_json
  } from './micheline'
-
- import {
-  oracleData_literal,
-  oracleData_literal_to_json,
- } from './oracle'
+import { oracleData, oracleData_container_to_json } from './oracle';
 
 /* assetMap ---------------------------------------------------------------- */
 
@@ -49,7 +45,7 @@ export class Normalizer {
     oracleContract : string,
     numDataPoints  : bigint,
     params         : Partial<parameters>,
-    assetMap      ?: oracleData_literal) {
+    assetMap      ?: Map<string, oracleData>) {
     const [normalizer_contract, _] = await Completium.deploy(
       './contracts/normalizer.arl', {
         parameters: {
@@ -63,10 +59,10 @@ export class Normalizer {
     )
     this.contract = normalizer_contract
   }
-  async update(a : oracleData_literal, params : Partial<parameters>) {
+  async update(a : Array< [ string, oracleData ] >, params : Partial<parameters>) {
     if (this.contract != undefined) {
       await this.contract.update({
-        argJsonMichelson: oracleData_literal_to_json(a),
+        argJsonMichelson: oracleData_container_to_json(new Map(a)),
         as: params.as,
         amount: params.amount ? params.amount.toString()+"utz" : undefined
       });
