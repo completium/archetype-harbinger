@@ -60,17 +60,16 @@ export class Normalizer {
     this.contract = normalizer_contract
   }
   async update(a : Array< [ string, oracleData ] >, params : Partial<parameters>) {
-    if (this.contract != undefined) {
-      await this.contract.update({
-        argJsonMichelson: oracleData_container_to_json(new Map(a)),
-        as: params.as,
-        amount: params.amount ? params.amount.toString()+"utz" : undefined
-      });
-    }
+    await Completium.call(this.contract.address, {
+      entry: 'update',
+      argJsonMichelson: oracleData_container_to_json(new Map(a)),
+      as: params.as,
+      amount: params.amount ? params.amount.toString()+"utz" : undefined
+    });
   }
   async get_assetMap(key : string) : Promise<assetMap | undefined> {
     if (this.contract != undefined) {
-      const storage = await this.contract.getStorage()
+      const storage = await Completium.getStorage(this.contract.address)
       const data = await Completium.getValueFromBigMap(
         parseInt(storage.assetMap),
         string_to_json(key),

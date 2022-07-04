@@ -194,35 +194,32 @@ export class Oracle {
     this.contract = oracle_contract
   }
   async update (a : Array< [ string, [ string, oracleData ] ]> , params : Partial<parameters>) : Promise<any> {
-    if (this.contract != undefined) {
-      await this.contract.update({
-        argJsonMichelson: update_arg_to_json(new Map(a)),
-        as: params.as,
-        amount: params.amount ? params.amount.toString()+"utz" : undefined
-      });
-    }
+    await Completium.call(this.contract.address, {
+      entry: 'update',
+      argJsonMichelson: update_arg_to_json(new Map(a)),
+      as: params.as,
+      amount: params.amount ? params.amount.toString()+"utz" : undefined
+    })
   }
   async push(e : Entrypoint, params : Partial<parameters>) : Promise<any> {
-    if (this.contract != undefined) {
-      await this.contract.push({
-        argJsonMichelson: e.to_json(),
-        as: params.as,
-        amount: params.amount ? params.amount.toString()+"utz" : undefined
-      })
-    }
+    await Completium.call(this.contract.address, {
+      entry: 'push',
+      argJsonMichelson: e.to_json(),
+      as: params.as,
+      amount: params.amount ? params.amount.toString()+"utz" : undefined
+    })
   }
   async revoke(a : string, params : Partial<parameters>) : Promise<any> {
-    if (this.contract != undefined) {
-      await this.contract.revoke({
-        argJsonMichelson: string_to_json(a),
-        as: params.as,
-        amount: params.amount ? params.amount.toString()+"utz" : undefined
-      });
-    }
+    await Completium.call(this.contract.address, {
+      entry: 'revoke',
+      argJsonMichelson: string_to_json(a),
+      as: params.as,
+      amount: params.amount ? params.amount.toString()+"utz" : undefined
+    });
   }
   async get_oracleData(key : string) : Promise<oracleData | undefined> {
     if (this.contract != undefined) {
-      const storage = await this.contract.getStorage()
+      const storage = await Completium.getStorage(this.contract.address)
       const data = await Completium.getValueFromBigMap(
         parseInt(storage.oracleData),
         string_to_json(key),
@@ -244,7 +241,7 @@ export class Oracle {
   }
   async get_state() : Promise<states> {
     if(this.contract != undefined) {
-      const storage = await this.contract.getStorage()
+      const storage = await Completium.getStorage(this.contract.address)
       const state = storage._state
       if (state.toNumber() == 0) {
         return states.Running
