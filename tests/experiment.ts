@@ -139,28 +139,25 @@ export const transfer = async (from : Account, to : Account | string, amount : b
 
 /* to Micheline ------------------------------------------------------------ */
 
-export const string_to_mich = (v : string) : Micheline => {
-  return { "string" : v }
-}
-
-export const string_mich_type : MichelineType = {
-  prim: "string"
-}
-
-export const key_mich_type : MichelineType = {
-  prim: "key"
+export const prim_to_mich_type = (
+  p : "address" | "bls12_381_fr" | "bls12_381_g1" | "bls12_381_g2" | "bool" | "bytes" |
+      "chain_id" | "chest" | "chest_key" | "int" | "key" | "key_hash" | "mutez" | "nat" |
+      "never" | "operation" | "signature" | "string" | "timestamp" | "unit") : MichelineType => {
+  return {
+    prim: p
+  }
 }
 
 export const none_mich : Micheline = {
   "prim": "None"
 }
 
-export const bool_to_mich = (v : boolean) : Micheline => {
-  return { "string" : v ? "True" : "False" }
+export const string_to_mich = (v : string) : Micheline => {
+  return { "string" : v }
 }
 
-export const bool_mich_type : MichelineType = {
-  prim: "bool"
+export const bool_to_mich = (v : boolean) : Micheline => {
+  return { "string" : v ? "True" : "False" }
 }
 
 export const bigint_to_mich = (v : bigint) : Micheline => {
@@ -181,14 +178,14 @@ export const pair_to_mich = (a : Micheline, b : Micheline) : Micheline => {
   }
 }
 
-export const pair_type_to_mich = (a : MichelineType, b : MichelineType) : MichelineType => {
+export const pair_to_mich_type = (a : MichelineType, b : MichelineType) : MichelineType => {
   return {
     prim: "pair",
     args: [ a, b ]
   }
 }
 
-export const option_type_to_mich = (a : MichelineType) : MichelineType => {
+export const option_to_mich_type = (a : MichelineType) : MichelineType => {
   return {
     prim: "option",
     args: [ a ]
@@ -202,7 +199,7 @@ export const some_to_mich = (a : Micheline) : Micheline => {
   }
 }
 
-export const option_to_json = <T>(v : T | undefined, to_mich : { (a : T) : Micheline }) : Micheline => {
+export const option_to_mich = <T>(v : T | undefined, to_mich : { (a : T) : Micheline }) : Micheline => {
   if (v != undefined) {
     return some_to_mich(to_mich(v))
   } else {
@@ -210,11 +207,11 @@ export const option_to_json = <T>(v : T | undefined, to_mich : { (a : T) : Miche
   }
 }
 
-export const list_to_json = <T>(l : Array<T>, to_mich : { (a : T) : Micheline }) => {
+export const list_to_mich = <T>(l : Array<T>, to_mich : { (a : T) : Micheline }) => {
   l.map(x => to_mich(x))
 }
 
-export const set_to_json = <T>(s : Set<T>, to_json : { (a : T) : Micheline }) => {
+export const set_to_mich = <T>(s : Set<T>, to_json : { (a : T) : Micheline }) => {
   Array.from(s.values()).map(x => to_json(x))
 }
 
