@@ -10,6 +10,7 @@ const {
   packTyped,
   sign
 } = require('@completium/completium-cli')
+const assert = require('assert')
 
 import {
   oracle,
@@ -30,8 +31,8 @@ import {
  key_type_json
 } from './micheline'
 
-
-const assert = require('assert')
+import {
+} from './experiment'
 
 /* Accounts ---------------------------------------------------------------- */
 
