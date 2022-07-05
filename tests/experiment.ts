@@ -70,21 +70,23 @@ export type MichelineType =
 | MTint
 | MTpair
 
-/* Account ----------------------------------------------------------------- */
+/* Interfaces -------------------------------------------------------------- */
 
-export interface account {
+export interface Account {
   name : string,
   pk   : string,
   pkh  : string,
   sk   : string,
 }
 
-export interface parameters {
-  as     : account,
+export interface Parameters {
+  as     : Account,
   amount : bigint
 }
 
-export const get_account = (name : string) : account => {
+/* Experiment API ---------------------------------------------------------- */
+
+export const get_account = (name : string) : Account => {
   const a = Completium.getAccount(name)
   return {
     name : a.name,
@@ -102,7 +104,7 @@ export const pack = (obj : Micheline, typ ?: MichelineType) => {
   }
 }
 
-export const sign = async (v : string, a : account) : Promise<string> => {
+export const sign = async (v : string, a : Account) : Promise<string> => {
   const signed = await Completium.sign(v, { as: a.name })
   return signed.prefixSig
 }
@@ -114,7 +116,7 @@ export const sign = async (v : string, a : account) : Promise<string> => {
  * @param a entry point argument
  * @param p parameters (as, amount)
  */
-export const call = async(c : string, e : string, a : Micheline, p : parameters) => {
+export const call = async(c : string, e : string, a : Micheline, p : Parameters) => {
   return await Completium.call(c, {
       entry: e,
       argJsonMichelson: a,
@@ -123,18 +125,29 @@ export const call = async(c : string, e : string, a : Micheline, p : parameters)
    })
 }
 
-export const transfer = async (from : account, to : account | string, amount : bigint) => {
+/**
+ * Transfers tez
+ * @param from account to transfer from
+ * @param to   account or address to transfer to
+ * @param amount amount to transfer in mutez
+ * @returns
+ */
+export const transfer = async (from : Account, to : Account | string, amount : bigint) => {
   const to_ = typeof to == "string" ? to : to.pkh
   return await Completium.transfer(from.pkh, to_, amount.toString())
 }
 
 /* to Micheline ------------------------------------------------------------ */
 
-export const string_type_mich : MichelineType = {
+export const string_to_mich = (v : string) : Micheline => {
+  return { "string" : v }
+}
+
+export const string_mich_type : MichelineType = {
   prim: "string"
 }
 
-export const key_type_mich : MichelineType = {
+export const key_mich_type : MichelineType = {
   prim: "key"
 }
 
@@ -142,12 +155,12 @@ export const none_mich : Micheline = {
   "prim": "None"
 }
 
-export const string_to_mich = (v : string) : Micheline => {
-  return { "string" : v }
-}
-
 export const bool_to_mich = (v : boolean) : Micheline => {
   return { "string" : v ? "True" : "False" }
+}
+
+export const bool_mich_type : MichelineType = {
+  prim: "bool"
 }
 
 export const bigint_to_mich = (v : bigint) : Micheline => {
@@ -219,7 +232,7 @@ export class Entrypoint {
     this.addr = a
     this.name =n
   }
-  to_json() {
+  to_mich() {
     return string_to_mich(this.addr+"%"+this.name)
   }
 }
