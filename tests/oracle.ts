@@ -17,7 +17,7 @@ import {
   pair_to_mich,
   get_big_map_value,
   prim_to_mich_type
-} from './experiment'
+} from '@completium/experiment-ts'
 
 /* OracleData -------------------------------------------------------------- */
 

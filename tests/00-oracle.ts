@@ -15,7 +15,7 @@ import {
   set_quiet,
   sign,
   string_to_mich
-} from './experiment'
+} from '@completium/experiment-ts'
 
 const assert = require('assert')
 

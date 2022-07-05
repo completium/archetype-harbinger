@@ -13,7 +13,7 @@ import {
   get_big_map_value,
   prim_to_mich_type,
   Marray
-} from './experiment'
+} from '@completium/experiment-ts'
 
 import { oracleData, oracleData_container_to_mich } from './oracle';
 

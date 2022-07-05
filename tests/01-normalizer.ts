@@ -7,7 +7,7 @@ import {
   set_mockup_now,
   set_quiet,
   Entrypoint
-} from './experiment'
+} from '@completium/experiment-ts'
 
 import {
   oracle,
