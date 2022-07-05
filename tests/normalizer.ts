@@ -1,26 +1,29 @@
 /* Imports ----------------------------------------------------------------- */
 
-const Completium = require('@completium/completium-cli');
-
 import {
-  parameters,
-  string_to_json,
-  string_type_json
- } from './micheline'
-import { oracleData, oracleData_container_to_json } from './oracle';
+  Mint,
+  Mstring,
+  Mpair,
+  Parameters,
+  Micheline,
+  deploy,
+  call,
+  get_storage,
+  string_to_mich,
+  get_big_map_value,
+  prim_to_mich_type,
+  Marray
+} from './experiment'
+
+import { oracleData, oracleData_container_to_mich } from './oracle';
 
 /* assetMap ---------------------------------------------------------------- */
-
-export interface saved_elt {
-  key   : bigint
-  value : bigint
-}
 
 export interface queue {
     first : bigint;
     last  : bigint;
     sum   : bigint;
-    saved : Array<saved_elt>
+    saved : Array<[ bigint, bigint ]>
 }
 
 export interface assetMap {
@@ -33,72 +36,68 @@ export interface assetMap {
 /* Normalizer ------------------------------------------------------------- */
 
 export class Normalizer {
-  contract : any
+  address : any
   get_address() : string | undefined {
-    if (this.contract != undefined) {
-      return this.contract.address
-    }
-    return undefined
+    return this.address
   }
   async deploy(
     assetCodes     : Array<string>,
     oracleContract : string,
     numDataPoints  : bigint,
-    params         : Partial<parameters>,
+    params         : Partial<Parameters>,
     assetMap      ?: Map<string, oracleData>) {
-    const [normalizer_contract, _] = await Completium.deploy(
-      './contracts/normalizer.arl', {
-        parameters: {
-          assetCodes     : assetCodes,
-          oracleContract : oracleContract,
-          numDataPoints  : numDataPoints
-        },
-        as: params.as,
-        amount: params.amount ? params.amount.toString()+"utz" : undefined
-      }
+    const address = await deploy(
+      './contracts/normalizer.arl',
+      {
+        assetCodes     : assetCodes,
+        oracleContract : oracleContract,
+        numDataPoints  : numDataPoints
+      },
+      params
     )
-    this.contract = normalizer_contract
+    this.address = address
   }
-  async update(a : Array< [ string, oracleData ] >, params : Partial<parameters>) {
-    await Completium.call(this.contract.address, {
-      entry: 'update',
-      argJsonMichelson: oracleData_container_to_json(new Map(a)),
-      as: params.as,
-      amount: params.amount ? params.amount.toString()+"utz" : undefined
-    });
+  async update(a : Array< [ string, oracleData ] >, params : Partial<Parameters>) {
+    if (this.address != undefined) {
+      await call(
+        this.address,
+        'update',
+        oracleData_container_to_mich(a),
+        params);
+    }
   }
   async get_assetMap(key : string) : Promise<assetMap | undefined> {
-    if (this.contract != undefined) {
-      const storage = await Completium.getStorage(this.contract.address)
-      const data = await Completium.getValueFromBigMap(
-        parseInt(storage.assetMap),
-        string_to_json(key),
-        string_type_json)
+    if (this.address != undefined) {
+      const storage = await get_storage(this.address)
+      const data = await get_big_map_value(
+        BigInt(storage.assetMap),
+        string_to_mich(key),
+        prim_to_mich_type("string"))
       if (data != undefined) {
         //console.log(JSON.stringify(data,null,2))
         return {
-          computedPrice : BigInt(data.args[0].int),
-          lastUpdateTime : data.args[1].string,
+          computedPrice : BigInt(((data as Mpair)["args"][0] as Mint)["int"]),
+          lastUpdateTime : ((data as Mpair)["args"][1] as Mstring)["string"],
           prices : {
-            first : BigInt(data.args[2].args[0].int),
-            last  : BigInt(data.args[2].args[1].int),
-            sum   : BigInt(data.args[2].args[2].int),
-            saved : data.args[2].args[3].map((x : any) => {
-              return {
-                elt: BigInt(x.args[0].int),
-                value : BigInt(x.args[1].int)
-              }
+            first : BigInt((((data as Mpair)["args"][2] as Mpair)["args"][0] as Mint)["int"]),
+            last  : BigInt((((data as Mpair)["args"][2] as Mpair)["args"][1] as Mint)["int"]),
+            sum   : BigInt((((data as Mpair)["args"][2] as Mpair)["args"][2] as Mint)["int"]),
+            saved : (((data as Mpair)["args"][2] as Mpair)["args"][3] as Marray).map((x : Micheline) => {
+              return [
+                BigInt(((x as Mpair)["args"][0] as Mint)["int"]),
+                BigInt(((x as Mpair)["args"][1] as Mint)["int"])
+              ]
             })
           },
           volumes : {
-            first : BigInt(data.args[3].int),
-            last  : BigInt(data.args[4].int),
-            sum   : BigInt(data.args[5].int),
-            saved : data.args[6].map((x : any) => {
-              return {
-                elt: BigInt(x.args[0].int),
-                value : BigInt(x.args[1].int)
-              }
+            first : BigInt(((data as Mpair)["args"][3] as Mint)["int"]),
+            last  : BigInt(((data as Mpair)["args"][4] as Mint)["int"]),
+            sum   : BigInt(((data as Mpair)["args"][5] as Mint)["int"]),
+            saved : ((data as Mpair)["args"][6] as Marray).map((x : any) => {
+              return [
+                BigInt(((x as Mpair)["args"][0] as Mint)["int"]),
+                BigInt(((x as Mpair)["args"][1] as Mint)["int"])
+              ]
             })
           }
         }
@@ -108,9 +107,9 @@ export class Normalizer {
     }
   }
   errors = {
-    INVALID_CALLER : "bad sender",
-    BAD_REQUEST    : "bad request",
-    INVALID_SUM    : "invalid sum"
+    INVALID_CALLER : string_to_mich("bad sender"),
+    BAD_REQUEST    : string_to_mich("bad request"),
+    INVALID_SUM    : string_to_mich("invalid sum")
   }
 }
 

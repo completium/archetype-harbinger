@@ -1,16 +1,23 @@
 /* Imports ----------------------------------------------------------------- */
 
-const Completium = require('@completium/completium-cli');
-
 import {
-  pair_to_json,
-  string_to_json,
-  string_type_json,
-  map_to_json,
-  string_cmp,
-  parameters,
-  Entrypoint
- } from './micheline'
+  Mint,
+  Mstring,
+  Mpair,
+  Parameters,
+  Entrypoint,
+  Micheline,
+  MichelineType,
+  deploy,
+  call,
+  get_storage,
+  string_to_mich,
+  list_to_mich,
+  elt_to_mich,
+  pair_to_mich,
+  get_big_map_value,
+  prim_to_mich_type
+} from './experiment'
 
 /* OracleData -------------------------------------------------------------- */
 
@@ -28,7 +35,7 @@ export const cmp_oracleData = (a : oracleData, b : oracleData) => {
   return a.start == b.start && a.end == b.end && a.open == b.open && a.high == b.high && a.low == b.low && a.close == b.close && a.volume == b.volume
 }
 
-export const oracleData_to_json = (v : oracleData) => {
+export const oracleData_to_mich = (v : oracleData) : Micheline => {
   return  {
     "prim": "Pair",
     "args": [
@@ -82,7 +89,7 @@ export const oracleData_to_json = (v : oracleData) => {
   }
 }
 
-export const oracleData_type = {
+export const oracleData_type : MichelineType = {
   "prim": "pair",
   "args": [
     {
@@ -155,14 +162,21 @@ export const oracleData_type = {
   ]
 }
 
-export const oracleData_container_to_json = (c : Map<string, oracleData>) => {
-  return map_to_json(c, string_to_json, oracleData_to_json, string_cmp)
+export const oracleData_container_to_mich = (c : Array< [string, oracleData] >) : Micheline => {
+  return list_to_mich(c, x => elt_to_mich(string_to_mich(x[0]), oracleData_to_mich(x[1])))
 }
 
 /* Update ------------------------------------------------------------------ */
 
-const update_arg_to_json = (l : Map< string, [ string, oracleData ]>) => {
-  return map_to_json(l, string_to_json, x => pair_to_json(string_to_json(x[0]), oracleData_to_json(x[1])), string_cmp)
+const sort_upm_key = (a : [ string, [ string, oracleData ] ], b : [ string, [ string, oracleData ] ]) : number => {
+  if (a[0] == b[0]) {
+    return 0;
+  }
+  return a[0] < b[0] ? -1 : 1;
+}
+
+const update_arg_to_mich = (l : Array< [ string, [ string, oracleData ] ]>) : Micheline => {
+  return list_to_mich(l.sort(sort_upm_key), x => elt_to_mich(string_to_mich(x[0]), pair_to_mich(string_to_mich(x[1][0]), oracleData_to_mich(x[1][1]))))
 }
 
 /* state ------------------------------------------------------------------- */
@@ -174,65 +188,49 @@ export enum states {
 /* Oracle ------------------------------------------------------------------ */
 
 export class Oracle {
-  contract : any
+  address : string | undefined
   get_address() : string | undefined {
-    if (this.contract != undefined) {
-      return this.contract.address
-    }
-    return undefined
+    return this.address
   }
-  async deploy(publickey : string,  params : Partial<parameters>, oracleData_lit ?: Map<string, oracleData>) {
-    const [oracle_contract, _] = await Completium.deploy(
+  async deploy(publickey : string,  params : Partial<Parameters>, oracleData_lit ?: Map<string, oracleData>) {
+    const address = await deploy(
       './contracts/oracle.arl', {
-        parameters: {
-          publickey: publickey,
-        },
-        as: params.as,
-        amount: params.amount ? params.amount.toString()+"utz" : undefined
-      }
+        publickey: publickey,
+      }, params
     )
-    this.contract = oracle_contract
+    this.address = address
   }
-  async update (a : Array< [ string, [ string, oracleData ] ]> , params : Partial<parameters>) : Promise<any> {
-    await Completium.call(this.contract.address, {
-      entry: 'update',
-      argJsonMichelson: update_arg_to_json(new Map(a)),
-      as: params.as,
-      amount: params.amount ? params.amount.toString()+"utz" : undefined
-    })
+  async update (a : Array< [ string, [ string, oracleData ] ]> , params : Partial<Parameters>) : Promise<any> {
+    if (this.address != undefined) {
+      await call(this.address, 'update', update_arg_to_mich(a), params)
+    }
   }
-  async push(e : Entrypoint, params : Partial<parameters>) : Promise<any> {
-    await Completium.call(this.contract.address, {
-      entry: 'push',
-      argJsonMichelson: e.to_json(),
-      as: params.as,
-      amount: params.amount ? params.amount.toString()+"utz" : undefined
-    })
+  async push(e : Entrypoint, params : Partial<Parameters>) : Promise<any> {
+    if (this.address != undefined) {
+      await call(this.address, 'push', e.to_mich(), params)
+    }
   }
-  async revoke(a : string, params : Partial<parameters>) : Promise<any> {
-    await Completium.call(this.contract.address, {
-      entry: 'revoke',
-      argJsonMichelson: string_to_json(a),
-      as: params.as,
-      amount: params.amount ? params.amount.toString()+"utz" : undefined
-    });
+  async revoke(a : string, params : Partial<Parameters>) : Promise<any> {
+    if (this.address != undefined) {
+      await call(this.address, 'revoke', string_to_mich(a), params);
+    }
   }
   async get_oracleData(key : string) : Promise<oracleData | undefined> {
-    if (this.contract != undefined) {
-      const storage = await Completium.getStorage(this.contract.address)
-      const data = await Completium.getValueFromBigMap(
-        parseInt(storage.oracleData),
-        string_to_json(key),
-        string_type_json)
+    if (this.address != undefined) {
+      const storage = await get_storage(this.address)
+      const data = await get_big_map_value(
+        BigInt(storage.oracleData),
+        string_to_mich(key),
+        prim_to_mich_type("string"))
       if (data != undefined) {
         return {
-          start  : data.args[0].string,
-          end    : data.args[1].string,
-          open   : BigInt(data.args[2].int),
-          high   : BigInt(data.args[3].int),
-          low    : BigInt(data.args[4].int),
-          close  : BigInt(data.args[5].int),
-          volume : BigInt(data.args[6].int)
+          start  : ((data as Mpair)["args"][0] as Mstring)["string"],
+          end    : ((data as Mpair)["args"][1] as Mstring)["string"],
+          open   : BigInt(((data as Mpair)["args"][2] as Mint)["int"]),
+          high   : BigInt(((data as Mpair)["args"][3] as Mint)["int"]),
+          low    : BigInt(((data as Mpair)["args"][4] as Mint)["int"]),
+          close  : BigInt(((data as Mpair)["args"][5] as Mint)["int"]),
+          volume : BigInt(((data as Mpair)["args"][6] as Mint)["int"])
         }
       } else {
         return undefined
@@ -240,8 +238,8 @@ export class Oracle {
     }
   }
   async get_state() : Promise<states> {
-    if(this.contract != undefined) {
-      const storage = await Completium.getStorage(this.contract.address)
+    if(this.address != undefined) {
+      const storage = await get_storage(this.address)
       const state = storage._state
       if (state.toNumber() == 0) {
         return states.Running
@@ -252,8 +250,8 @@ export class Oracle {
     return states.Running
   }
   errors = {
-    INVALID_SIG : "bad sig",
-    REVOKED     : "revoked"
+    INVALID_SIG : string_to_mich("bad sig"),
+    REVOKED     : string_to_mich("revoked")
   }
 }
 

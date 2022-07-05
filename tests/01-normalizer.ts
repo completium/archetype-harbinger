@@ -1,13 +1,13 @@
 /* Imports ----------------------------------------------------------------- */
 
-const {
-  deploy,
-  expectToThrow,
-  getAccount,
-  setEndpoint,
-  setMockupNow,
-  setQuiet,
-} = require('@completium/completium-cli')
+import {
+  expect_to_fail,
+  get_account,
+  set_mockup,
+  set_mockup_now,
+  set_quiet,
+  Entrypoint
+} from './experiment'
 
 import {
   oracle,
@@ -23,30 +23,24 @@ import {
   normalizer
 } from './normalizer'
 
-import {
- Entrypoint
-} from './micheline'
-
 
 const assert = require('assert')
 
 /* Accounts ---------------------------------------------------------------- */
 
-const alice = getAccount('alice');
-const bob   = getAccount('bob');
+const alice = get_account('alice');
 
 /* Endpoint ---------------------------------------------------------------- */
 
-setEndpoint('mockup');
+set_mockup()
 
 /* Verbose mode ------------------------------------------------------------ */
 
-setQuiet(true);
+set_quiet(true);
 
 /* Now --------------------------------------------------------------------- */
 
-const now = Math.floor(Date.now() / 1000)
-setMockupNow(now)
+set_mockup_now(new Date(Date.now()))
 
 /* Utils ------------------------------------------------------------------- */
 
@@ -150,12 +144,12 @@ const VWAP6 = computeVWAP(input6.high, input6.low, input6.close, input6.volume)
 
 describe('[Normalizer] Contracts deployment', async () => {
   it('Deploy Oracle', async () => {
-    await oracle.deploy(alice.pubk, { as: alice.pkh })
+    await oracle.deploy(alice.pubk, { as: alice })
   });
   it('Deploy Normalizer', async () => {
     const oracle_addr = oracle.get_address()
     if (oracle_addr != undefined) {
-      await normalizer.deploy(["XTZ-USD", "BTC-USD"], oracle_addr, BigInt(numDataPoints),  { as: alice.pkh })
+      await normalizer.deploy(["XTZ-USD", "BTC-USD"], oracle_addr, BigInt(numDataPoints),  { as: alice })
     } else {
       assert(false)
     }
@@ -170,16 +164,16 @@ describe('[Normalizer] Contracts deployment', async () => {
 
 describe('[Normalizer] Update', async () => {
   it('Fails when data is pushed from bad address', async () => {
-    expectToThrow(async () => {
-      await normalizer.update([ [ "XTZ-USD", input0 ] ], { as : alice.pkh })
+    expect_to_fail(async () => {
+      await normalizer.update([ [ "XTZ-USD", input0 ] ], { as : alice })
     }, normalizer.errors.INVALID_CALLER)
   })
   it('Correctly processes updates', async () => {
     const sig1 = await sign_oracle_data(asset1, input1, alice)
     await oracle.update([ [ asset1, [ sig1, input1 ] ] ], {
-      as: alice.pkh
+      as: alice
     })
-    await oracle.push(update_entry, { as : alice.pkh })
+    await oracle.push(update_entry, { as : alice })
     const assetMap = await normalizer.get_assetMap(asset1)
     if (assetMap != undefined) {
       assert(assetMap.computedPrice == quotient(VWAP1, input1.volume))
@@ -190,9 +184,9 @@ describe('[Normalizer] Update', async () => {
   it('Update with same time does not update', async () => {
     const sig = await sign_oracle_data(asset1, input1_same_date, alice)
     await oracle.update([ [ asset1, [ sig, input1_same_date ] ] ], {
-      as: alice.pkh
+      as: alice
     })
-    await oracle.push(update_entry, { as : alice.pkh })
+    await oracle.push(update_entry, { as : alice })
     const assetMap = await normalizer.get_assetMap(asset1)
     if (assetMap != undefined) {
       assert(assetMap.computedPrice == quotient(VWAP1, input1.volume))
@@ -204,9 +198,9 @@ describe('[Normalizer] Update', async () => {
   it('Update with input2', async () => {
     const sig = await sign_oracle_data(asset1, input2, alice)
     await oracle.update([ [ asset1, [ sig, input2 ] ] ], {
-      as: alice.pkh
+      as: alice
     })
-    await oracle.push(update_entry, { as : alice.pkh })
+    await oracle.push(update_entry, { as : alice })
     const assetMap = await normalizer.get_assetMap(asset1)
     if (assetMap != undefined) {
       assert(assetMap.computedPrice == quotient(VWAP1 + VWAP2, input1.volume + input2.volume))
@@ -218,9 +212,9 @@ describe('[Normalizer] Update', async () => {
   it('Update with input3', async () => {
     const sig = await sign_oracle_data(asset1, input3, alice)
     await oracle.update([ [ asset1, [ sig, input3 ] ] ], {
-      as: alice.pkh
+      as: alice
     })
-    await oracle.push(update_entry, { as : alice.pkh })
+    await oracle.push(update_entry, { as : alice })
     const assetMap = await normalizer.get_assetMap(asset1)
     if (assetMap != undefined) {
       assert(assetMap.computedPrice == quotient(VWAP1 + VWAP2 + VWAP3, input1.volume + input2.volume + input3.volume))
@@ -232,9 +226,9 @@ describe('[Normalizer] Update', async () => {
   it('Update with input4', async () => {
     const sig = await sign_oracle_data(asset1, input4, alice)
     await oracle.update([ [ asset1, [ sig, input4 ] ] ], {
-      as: alice.pkh
+      as: alice
     })
-    await oracle.push(update_entry, { as : alice.pkh })
+    await oracle.push(update_entry, { as : alice })
     const assetMap = await normalizer.get_assetMap(asset1)
     if (assetMap != undefined) {
       assert(assetMap.computedPrice == quotient(VWAP2 + VWAP3 + VWAP4, input2.volume + input3.volume + input4.volume))
@@ -246,9 +240,9 @@ describe('[Normalizer] Update', async () => {
   it('Update with input5', async () => {
     const sig = await sign_oracle_data(asset1, input5, alice)
     await oracle.update([ [ asset1, [ sig, input5 ] ] ], {
-      as: alice.pkh
+      as: alice
     })
-    await oracle.push(update_entry, { as : alice.pkh })
+    await oracle.push(update_entry, { as : alice })
     const assetMap = await normalizer.get_assetMap(asset1)
     if (assetMap != undefined) {
       assert(assetMap.computedPrice == quotient(VWAP3 + VWAP4 + VWAP5, input3.volume + input4.volume + input5.volume))
@@ -260,9 +254,9 @@ describe('[Normalizer] Update', async () => {
   it('Update with input6', async () => {
     const sig = await sign_oracle_data(asset1, input6, alice)
     await oracle.update([ [ asset1, [ sig, input6 ] ] ], {
-      as: alice.pkh
+      as: alice
     })
-    await oracle.push(update_entry, { as : alice.pkh })
+    await oracle.push(update_entry, { as : alice })
     const assetMap = await normalizer.get_assetMap(asset1)
     if (assetMap != undefined) {
       assert(assetMap.computedPrice == quotient(VWAP4 + VWAP5 + VWAP6, input4.volume + input5.volume + input6.volume))
