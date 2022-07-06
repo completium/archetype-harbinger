@@ -14,7 +14,8 @@ import {
   set_mockup_now,
   set_quiet,
   sign,
-  string_to_mich
+  string_to_mich,
+  pair_array_to_mich_type
 } from '@completium/experiment-ts'
 
 const assert = require('assert')
@@ -48,8 +49,8 @@ set_mockup_now(new Date(Date.now()))
 /* Utils ------------------------------------------------------------------- */
 
 export const sign_oracle_data = async (key : string, data : oracleData, signer : Account) => {
-  const value = pair_to_mich(string_to_mich(key), oracleData_to_mich(data))
-  const type  = pair_to_mich_type(prim_to_mich_type("string"), oracleData_type)
+  const value = pair_to_mich([string_to_mich(key), oracleData_to_mich(data)])
+  const type  = pair_array_to_mich_type([prim_to_mich_type("string"), oracleData_type])
   const packed = pack(value, type)
   return await sign(packed, signer)
 }

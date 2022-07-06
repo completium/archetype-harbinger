@@ -1,23 +1,6 @@
 /* Imports ----------------------------------------------------------------- */
 
-import {
-  Mint,
-  Mstring,
-  Mpair,
-  Parameters,
-  Entrypoint,
-  Micheline,
-  MichelineType,
-  deploy,
-  call,
-  get_storage,
-  string_to_mich,
-  list_to_mich,
-  elt_to_mich,
-  pair_to_mich,
-  get_big_map_value,
-  prim_to_mich_type
-} from '@completium/experiment-ts'
+import { bigint_to_mich, call, deploy, elt_to_mich, Entrypoint, get_big_map_value, get_storage, list_to_mich, Micheline, MichelineType, Mint, Mpair, Mstring, pair_array_to_mich_type, pair_to_mich, Parameters, prim_annot_to_mich_type, prim_to_mich_type, string_to_mich } from '@completium/experiment-ts'
 
 /* OracleData -------------------------------------------------------------- */
 
@@ -32,138 +15,63 @@ export interface oracleData {
 }
 
 export const cmp_oracleData = (a : oracleData, b : oracleData) => {
-  return a.start == b.start && a.end == b.end && a.open == b.open && a.high == b.high && a.low == b.low && a.close == b.close && a.volume == b.volume
+  return (
+    a.start  == b.start &&
+    a.end    == b.end   &&
+    a.open   == b.open  &&
+    a.high   == b.high  &&
+    a.low    == b.low   &&
+    a.close  == b.close &&
+    a.volume == b.volume
+  )
 }
 
 export const oracleData_to_mich = (v : oracleData) : Micheline => {
-  return  {
-    "prim": "Pair",
-    "args": [
-      {
-        "string": `${v.start}`
-      },
-      {
-        "prim": "Pair",
-        "args": [
-          {
-            "string": `${v.end}`
-          },
-          {
-            "prim": "Pair",
-            "args": [
-              {
-                "int": `${v.open}`
-              },
-              {
-                "prim": "Pair",
-                "args": [
-                  {
-                    "int": `${v.high}`
-                  },
-                  {
-                    "prim": "Pair",
-                    "args": [
-                      {
-                        "int": `${v.low}`
-                      },
-                      {
-                        "prim": "Pair",
-                        "args": [
-                          {
-                            "int": `${v.close}`
-                          },
-                          {
-                            "int": `${v.volume}`
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    ]
-  }
+  return pair_to_mich([
+    string_to_mich(v.start),
+    string_to_mich(v.end),
+    bigint_to_mich(v.open),
+    bigint_to_mich(v.high),
+    bigint_to_mich(v.low),
+    bigint_to_mich(v.close),
+    bigint_to_mich(v.volume),
+  ])
 }
 
-export const oracleData_type : MichelineType = {
-  "prim": "pair",
-  "args": [
-    {
-      "prim": "timestamp",
-      "annots": [
-        "%start"
-      ]
-    },
-    {
-      "prim": "pair",
-      "args": [
-        {
-          "prim": "timestamp",
-          "annots": [
-            "%end"
-          ]
-        },
-        {
-          "prim": "pair",
-          "args": [
-            {
-              "prim": "nat",
-              "annots": [
-                "%open"
-              ]
-            },
-            {
-              "prim": "pair",
-              "args": [
-                {
-                  "prim": "nat",
-                  "annots": [
-                    "%high"
-                  ]
-                },
-                {
-                  "prim": "pair",
-                  "args": [
-                    {
-                      "prim": "nat",
-                      "annots": [
-                        "%low"
-                      ]
-                    },
-                    {
-                      "prim": "pair",
-                      "args": [
-                        {
-                          "prim": "nat",
-                          "annots": [
-                            "%close"
-                          ]
-                        },
-                        {
-                          "prim": "nat",
-                          "annots": [
-                            "%volume"
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    }
-  ]
-}
+export const oracleData_type : any =
+  pair_array_to_mich_type([
+    prim_annot_to_mich_type("timestamp", ["%start"]),
+    prim_annot_to_mich_type("timestamp", ["%end"]),
+    prim_annot_to_mich_type("nat", ["%open"]),
+    prim_annot_to_mich_type("nat", ["%high"]),
+    prim_annot_to_mich_type("nat", ["%low"]),
+    prim_annot_to_mich_type("nat", ["%close"]),
+    prim_annot_to_mich_type("nat", ["%volume"]),
+  ])
 
 export const oracleData_container_to_mich = (c : Array< [string, oracleData] >) : Micheline => {
   return list_to_mich(c, x => elt_to_mich(string_to_mich(x[0]), oracleData_to_mich(x[1])))
+}
+
+const get_oracleData = async (address : string, key : string) : Promise<oracleData | undefined> => {
+  const storage = await get_storage(address)
+  const data = await get_big_map_value(
+    BigInt(storage.oracleData),
+    string_to_mich(key),
+    prim_to_mich_type("string"))
+  if (data != undefined) {
+    return {
+      start  : ((data as Mpair)["args"][0] as Mstring)["string"],
+      end    : ((data as Mpair)["args"][1] as Mstring)["string"],
+      open   : BigInt(((data as Mpair)["args"][2] as Mint)["int"]),
+      high   : BigInt(((data as Mpair)["args"][3] as Mint)["int"]),
+      low    : BigInt(((data as Mpair)["args"][4] as Mint)["int"]),
+      close  : BigInt(((data as Mpair)["args"][5] as Mint)["int"]),
+      volume : BigInt(((data as Mpair)["args"][6] as Mint)["int"])
+    }
+  } else {
+    return undefined
+  }
 }
 
 /* Update ------------------------------------------------------------------ */
@@ -176,7 +84,7 @@ const sort_upm_key = (a : [ string, [ string, oracleData ] ], b : [ string, [ st
 }
 
 const update_arg_to_mich = (l : Array< [ string, [ string, oracleData ] ]>) : Micheline => {
-  return list_to_mich(l.sort(sort_upm_key), x => elt_to_mich(string_to_mich(x[0]), pair_to_mich(string_to_mich(x[1][0]), oracleData_to_mich(x[1][1]))))
+  return list_to_mich(l.sort(sort_upm_key), x => elt_to_mich(string_to_mich(x[0]), pair_to_mich([string_to_mich(x[1][0]), oracleData_to_mich(x[1][1])])))
 }
 
 /* state ------------------------------------------------------------------- */
@@ -217,24 +125,10 @@ export class Oracle {
   }
   async get_oracleData(key : string) : Promise<oracleData | undefined> {
     if (this.address != undefined) {
-      const storage = await get_storage(this.address)
-      const data = await get_big_map_value(
-        BigInt(storage.oracleData),
-        string_to_mich(key),
-        prim_to_mich_type("string"))
-      if (data != undefined) {
-        return {
-          start  : ((data as Mpair)["args"][0] as Mstring)["string"],
-          end    : ((data as Mpair)["args"][1] as Mstring)["string"],
-          open   : BigInt(((data as Mpair)["args"][2] as Mint)["int"]),
-          high   : BigInt(((data as Mpair)["args"][3] as Mint)["int"]),
-          low    : BigInt(((data as Mpair)["args"][4] as Mint)["int"]),
-          close  : BigInt(((data as Mpair)["args"][5] as Mint)["int"]),
-          volume : BigInt(((data as Mpair)["args"][6] as Mint)["int"])
-        }
-      } else {
-        return undefined
-      }
+      return await get_oracleData(this.address, key)
+    }
+    else {
+      return undefined
     }
   }
   async get_state() : Promise<states> {
