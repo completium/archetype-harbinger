@@ -52,8 +52,8 @@ export const asset1          = "XTZ-USD"
 export const asset2          = "BTC-USD"
 const asset_untracked = "XTZ-BTC"
 const input1 : oracleData = {
-  start  : '1970-01-01T00:00:01Z',
-  end    : '1970-01-01T00:00:02Z',
+  start  : new Date('1970-01-01T00:00:01Z'),
+  end    : new Date('1970-01-01T00:00:02Z'),
   open   : BigInt(3),
   high   : BigInt(4),
   low    : BigInt(5),
@@ -61,8 +61,8 @@ const input1 : oracleData = {
   volume : BigInt(7)
 }
 const input2 : oracleData  = {
-  start  : '1970-01-01T00:00:08Z',
-  end    : '1970-01-01T00:00:09Z',
+  start  : new Date('1970-01-01T00:00:08Z'),
+  end    : new Date('1970-01-01T00:00:09Z'),
   open   : BigInt(10),
   high   : BigInt(11),
   low    : BigInt(12),
@@ -70,8 +70,8 @@ const input2 : oracleData  = {
   volume : BigInt(14)
 }
 const input_past : oracleData  = {
-  start  : '1970-01-01T00:00:08Z',
-  end    : '1970-01-01T00:00:09Z',
+  start  : new Date('1970-01-01T00:00:08Z'),
+  end    : new Date('1970-01-01T00:00:09Z'),
   open   : BigInt(15),
   high   : BigInt(16),
   low    : BigInt(17),
@@ -79,8 +79,8 @@ const input_past : oracleData  = {
   volume : BigInt(19)
 }
 const input3 : oracleData = {
-  start  : '1970-01-01T00:00:15Z',
-  end    : '1970-01-01T00:00:16Z',
+  start  : new Date('1970-01-01T00:00:15Z'),
+  end    : new Date('1970-01-01T00:00:16Z'),
   open   : BigInt(17),
   high   : BigInt(18),
   low    : BigInt(19),
@@ -88,8 +88,8 @@ const input3 : oracleData = {
   volume : BigInt(21)
 }
 const input4 : oracleData = {
-  start  : '1970-01-01T00:00:22Z',
-  end    : '1970-01-01T00:00:23Z',
+  start  : new Date('1970-01-01T00:00:22Z'),
+  end    : new Date('1970-01-01T00:00:23Z'),
   open   : BigInt(24),
   high   : BigInt(25),
   low    : BigInt(26),

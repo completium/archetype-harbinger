@@ -1,28 +1,10 @@
 /* Imports ----------------------------------------------------------------- */
 
-import {
-  expect_to_fail,
-  get_account,
-  set_mockup,
-  set_mockup_now,
-  set_quiet,
-  Entrypoint
-} from '@completium/experiment-ts'
+import { Entrypoint, expect_to_fail, get_account, set_mockup, set_mockup_now, set_quiet } from '@completium/experiment-ts'
 
-import {
-  oracle,
-  oracleData,
-} from './oracle'
-
-import {
-  asset1,
-  sign_oracle_data
-} from './00-oracle'
-
-import {
-  normalizer
-} from './normalizer'
-
+import { asset1, sign_oracle_data } from './00-oracle'
+import { normalizer } from './normalizer'
+import { oracle, oracleData } from './oracle'
 
 const assert = require('assert')
 
@@ -62,8 +44,8 @@ const numDataPoints = 3
 let update_entry : Entrypoint
 
 const input0 : oracleData = {
-  start  : '2020-07-18T22:35:01Z',
-  end    : '2020-07-18T22:35:31Z',
+  start  : new Date('2020-07-18T22:35:01Z'),
+  end    : new Date('2020-07-18T22:35:31Z'),
   open   : BigInt(3059701),
   high   : BigInt(1),
   low    : BigInt(2),
@@ -71,8 +53,8 @@ const input0 : oracleData = {
   volume : BigInt(4)
 }
 const input1 : oracleData = {
-  start  : '1970-01-01T00:00:01Z',
-  end    : '1970-01-01T00:00:02Z',
+  start  : new Date('1970-01-01T00:00:01Z'),
+  end    : new Date('1970-01-01T00:00:02Z'),
   open   : BigInt(1),
   high   : BigInt(2),
   low    : BigInt(3),
@@ -80,8 +62,8 @@ const input1 : oracleData = {
   volume : BigInt(5)
 }
 const input1_same_date : oracleData = {
-  start  : '1970-01-01T00:00:01Z',
-  end    : '1970-01-01T00:00:02Z',
+  start  : new Date('1970-01-01T00:00:01Z'),
+  end    : new Date('1970-01-01T00:00:02Z'),
   open   : BigInt(6),
   high   : BigInt(7),
   low    : BigInt(8),
@@ -89,8 +71,8 @@ const input1_same_date : oracleData = {
   volume : BigInt(10)
 }
 const input2 : oracleData = {
-  start  : '1970-01-01T00:00:03Z',
-  end    : '1970-01-01T00:00:04Z',
+  start  : new Date('1970-01-01T00:00:03Z'),
+  end    : new Date('1970-01-01T00:00:04Z'),
   open   : BigInt(6),
   high   : BigInt(7),
   low    : BigInt(8),
@@ -98,8 +80,8 @@ const input2 : oracleData = {
   volume : BigInt(10)
 }
 const input3 : oracleData = {
-  start  : '1970-01-01T00:00:05Z',
-  end    : '1970-01-01T00:00:06Z',
+  start  : new Date('1970-01-01T00:00:05Z'),
+  end    : new Date('1970-01-01T00:00:06Z'),
   open   : BigInt(11),
   high   : BigInt(12),
   low    : BigInt(13),
@@ -107,8 +89,8 @@ const input3 : oracleData = {
   volume : BigInt(15)
 }
 const input4 : oracleData = {
-  start  : '1970-01-01T00:00:07Z',
-  end    : '1970-01-01T00:00:08Z',
+  start  : new Date('1970-01-01T00:00:07Z'),
+  end    : new Date('1970-01-01T00:00:08Z'),
   open   : BigInt(16),
   high   : BigInt(17),
   low    : BigInt(18),
@@ -116,8 +98,8 @@ const input4 : oracleData = {
   volume : BigInt(20)
 }
 const input5 : oracleData = {
-  start  : '1970-01-01T00:00:09Z',
-  end    : '1970-01-01T00:00:10Z',
+  start  : new Date('1970-01-01T00:00:09Z'),
+  end    : new Date('1970-01-01T00:00:10Z'),
   open   : BigInt(21),
   high   : BigInt(22),
   low    : BigInt(23),
@@ -125,8 +107,8 @@ const input5 : oracleData = {
   volume : BigInt(25)
 }
 const input6 : oracleData = {
-  start  : '1970-01-01T00:00:11Z',
-  end    : '1970-01-01T00:00:12Z',
+  start  : new Date('1970-01-01T00:00:11Z'),
+  end    : new Date('1970-01-01T00:00:12Z'),
   open   : BigInt(26),
   high   : BigInt(27),
   low    : BigInt(28),
