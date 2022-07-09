@@ -1,22 +1,6 @@
 /* Imports ----------------------------------------------------------------- */
 
-import {
-  Account,
-  expect_to_fail,
-  get_account,
-  none_mich,
-  option_to_mich_type,
-  pack,
-  pair_to_mich,
-  pair_to_mich_type,
-  prim_to_mich_type,
-  set_mockup,
-  set_mockup_now,
-  set_quiet,
-  sign,
-  string_to_mich,
-  pair_array_to_mich_type
-} from '@completium/experiment-ts'
+import { Account, expect_to_fail, get_account, none_mich, option_to_mich_type, pack, pair_array_to_mich_type, pair_to_mich, pair_to_mich_type, prim_to_mich_type, set_mockup, set_mockup_now, set_quiet, sign, string_to_mich } from '@completium/experiment-ts'
 
 const assert = require('assert')
 
