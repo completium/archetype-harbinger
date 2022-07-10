@@ -1,157 +1,163 @@
-/* Imports ----------------------------------------------------------------- */
-
-import { bigint_to_mich, call, date_to_mich, deploy, elt_to_mich, Entrypoint, get_big_map_value, get_storage, list_to_mich, mich_to_bigint, mich_to_date, mich_to_pairs, Micheline, MichelineType, Mint, Mpair, Mstring, pair_array_to_mich_type, pair_to_mich, Parameters, prim_annot_to_mich_type, prim_to_mich_type, string_to_mich } from '@completium/experiment-ts'
-
-/* OracleData -------------------------------------------------------------- */
-
-export interface oracleData {
-  start  : Date,
-  end    : Date,
-  open   : bigint,
-  high   : bigint,
-  low    : bigint,
-  close  : bigint,
-  volume : bigint
-}
-
-export const cmp_oracleData = (a : oracleData, b : oracleData) => {
-  return (
-    a.start.toISOString()  == b.start.toISOString() &&
-    a.end.toISOString()   == b.end.toISOString()   &&
-    a.open   == b.open  &&
-    a.high   == b.high  &&
-    a.low    == b.low   &&
-    a.close  == b.close &&
-    a.volume == b.volume
-  )
-}
-
-export const oracleData_to_mich = (v : oracleData) : Micheline => {
-  return pair_to_mich([
-    date_to_mich(v.start),
-    date_to_mich(v.end),
-    bigint_to_mich(v.open),
-    bigint_to_mich(v.high),
-    bigint_to_mich(v.low),
-    bigint_to_mich(v.close),
-    bigint_to_mich(v.volume),
-  ])
-}
-
-export const mich_to_oracleData = (v : Micheline) : oracleData => {
-  const fields = mich_to_pairs(v)
-  return {
-    start  : mich_to_date(fields[0]),
-    end    : mich_to_date(fields[1]),
-    open   : mich_to_bigint(fields[2]),
-    high   : mich_to_bigint(fields[3]),
-    low    : mich_to_bigint(fields[4]),
-    close  : mich_to_bigint(fields[5]),
-    volume : mich_to_bigint(fields[6])
-  }
-}
-
-export const oracleData_type : any =
-  pair_array_to_mich_type([
-    prim_annot_to_mich_type("timestamp", ["%start"]),
-    prim_annot_to_mich_type("timestamp", ["%end"]),
-    prim_annot_to_mich_type("nat", ["%open"]),
-    prim_annot_to_mich_type("nat", ["%high"]),
-    prim_annot_to_mich_type("nat", ["%low"]),
-    prim_annot_to_mich_type("nat", ["%close"]),
-    prim_annot_to_mich_type("nat", ["%volume"]),
-  ])
-
-export const oracleData_container_to_mich = (c : Array< [string, oracleData] >) : Micheline => {
-  return list_to_mich(c, x => elt_to_mich(string_to_mich(x[0]), oracleData_to_mich(x[1])))
-}
-
-const get_oracleData = async (address : string, key : string) : Promise<oracleData | undefined> => {
-  const storage = await get_storage(address)
-  const data = await get_big_map_value(
-    BigInt(storage.oracleData),
-    string_to_mich(key),
-    prim_to_mich_type("string"))
-  if (data != undefined) {
-    return mich_to_oracleData(data)
-  } else {
-    return undefined
-  }
-}
-
-/* Update ------------------------------------------------------------------ */
-
-const sort_upm_key = (a : [ string, [ string, oracleData ] ], b : [ string, [ string, oracleData ] ]) : number => {
-  if (a[0] == b[0]) {
-    return 0;
-  }
-  return a[0] < b[0] ? -1 : 1;
-}
-
-const update_arg_to_mich = (l : Array< [ string, [ string, oracleData ] ]>) : Micheline => {
-  return list_to_mich(l.sort(sort_upm_key), x => elt_to_mich(string_to_mich(x[0]), pair_to_mich([string_to_mich(x[1][0]), oracleData_to_mich(x[1][1])])))
-}
-
-/* state ------------------------------------------------------------------- */
+import * as ex from "@completium/experiment-ts";
 
 export enum states {
-  Running = 1,
-  Revoked,
+    Running = 1,
+    Revoked
 }
-/* Oracle ------------------------------------------------------------------ */
-
+export type oracleData_key = string;
+export const oracleData_key_to_mich = (x: oracleData_key): ex.Micheline => {
+    return ex.string_to_mich(x);
+};
+export const oracleData_key_mich_type: ex.MichelineType = ex.prim_annot_to_mich_type("string", []);
+export interface oracleData_value {
+    start: Date;
+    end: Date;
+    open: bigint;
+    high: bigint;
+    low: bigint;
+    close: bigint;
+    volume: bigint;
+}
+export const oracleData_value_to_mich = (x: oracleData_value): ex.Micheline => {
+    return ex.pair_to_mich([ex.date_to_mich(x.start), ex.pair_to_mich([ex.date_to_mich(x.end), ex.pair_to_mich([ex.bigint_to_mich(x.open), ex.pair_to_mich([ex.bigint_to_mich(x.high), ex.pair_to_mich([ex.bigint_to_mich(x.low), ex.pair_to_mich([ex.bigint_to_mich(x.close), ex.bigint_to_mich(x.volume)])])])])])]);
+};
+export const oracleData_value_mich_type: ex.MichelineType = ex.pair_array_to_mich_type([
+    ex.prim_annot_to_mich_type("timestamp", ["%start"]),
+    ex.pair_array_to_mich_type([
+        ex.prim_annot_to_mich_type("timestamp", ["%end"]),
+        ex.pair_array_to_mich_type([
+            ex.prim_annot_to_mich_type("nat", ["%open"]),
+            ex.pair_array_to_mich_type([
+                ex.prim_annot_to_mich_type("nat", ["%high"]),
+                ex.pair_array_to_mich_type([
+                    ex.prim_annot_to_mich_type("nat", ["%low"]),
+                    ex.pair_array_to_mich_type([
+                        ex.prim_annot_to_mich_type("nat", ["%close"]),
+                        ex.prim_annot_to_mich_type("nat", ["%volume"])
+                    ])
+                ])
+            ])
+        ])
+    ])
+]);
+export const mich_to_oracleData_value = (v: ex.Micheline): oracleData_value => {
+    const fields = ex.mich_to_pairs(v);
+    return { start: ex.mich_to_date(fields[0]), end: ex.mich_to_date(fields[1]), open: ex.mich_to_bigint(fields[2]), high: ex.mich_to_bigint(fields[3]), low: ex.mich_to_bigint(fields[4]), close: ex.mich_to_bigint(fields[5]), volume: ex.mich_to_bigint(fields[6]) };
+};
+export const oracleData_value_cmp = (a: oracleData_value, b: oracleData_value) => {
+    return (a.start.toISOString() == b.start.toISOString() && a.end.toISOString() == b.end.toISOString() && a.open == b.open && a.high == b.high && a.low == b.low && a.close == b.close && a.volume == b.volume);
+};
+export type oracleData_container = Array<[
+    oracleData_key,
+    oracleData_value
+]>;
+export const oracleData_container_to_mich = (x: oracleData_container): ex.Micheline => {
+    return ex.list_to_mich(x, x => {
+        const x_key = x[0];
+        const x_value = x[1];
+        return ex.elt_to_mich(ex.string_to_mich(x_key), ex.pair_to_mich([ex.date_to_mich(x_value.start), ex.pair_to_mich([ex.date_to_mich(x_value.end), ex.pair_to_mich([ex.bigint_to_mich(x_value.open), ex.pair_to_mich([ex.bigint_to_mich(x_value.high), ex.pair_to_mich([ex.bigint_to_mich(x_value.low), ex.pair_to_mich([ex.bigint_to_mich(x_value.close), ex.bigint_to_mich(x_value.volume)])])])])])]));
+    });
+};
+export const oracleData_container_mich_type: ex.MichelineType = ex.pair_to_mich_type("big_map", ex.prim_annot_to_mich_type("string", []), ex.pair_array_to_mich_type([
+    ex.prim_annot_to_mich_type("timestamp", ["%start"]),
+    ex.pair_array_to_mich_type([
+        ex.prim_annot_to_mich_type("timestamp", ["%end"]),
+        ex.pair_array_to_mich_type([
+            ex.prim_annot_to_mich_type("nat", ["%open"]),
+            ex.pair_array_to_mich_type([
+                ex.prim_annot_to_mich_type("nat", ["%high"]),
+                ex.pair_array_to_mich_type([
+                    ex.prim_annot_to_mich_type("nat", ["%low"]),
+                    ex.pair_array_to_mich_type([
+                        ex.prim_annot_to_mich_type("nat", ["%close"]),
+                        ex.prim_annot_to_mich_type("nat", ["%volume"])
+                    ])
+                ])
+            ])
+        ])
+    ])
+]));
+const update_arg_to_mich = (upm: Array<[
+    string,
+    [
+        string,
+        oracleData_value
+    ]
+]>): ex.Micheline => {
+    return ex.list_to_mich(upm, x => {
+        const x_key = x[0];
+        const x_value = x[1];
+        return ex.elt_to_mich(ex.string_to_mich(x_key), ex.pair_to_mich([ex.string_to_mich(x_value[0]), oracleData_value_to_mich(x_value[1])]));
+    });
+}
+const push_arg_to_mich = (normalizer: ex.Entrypoint): ex.Micheline => {
+    return normalizer.to_mich();
+}
+const revoke_arg_to_mich = (sig: string): ex.Micheline => {
+    return ex.string_to_mich(sig);
+}
 export class Oracle {
-  address : string | undefined
-  get_address() : string | undefined {
-    return this.address
-  }
-  async deploy(publickey : string,  params : Partial<Parameters>, oracleData_lit ?: Map<string, oracleData>) {
-    const address = await deploy(
-      './contracts/oracle.arl', {
-        publickey: publickey,
-      }, params
-    )
-    this.address = address
-  }
-  async update (a : Array< [ string, [ string, oracleData ] ]> , params : Partial<Parameters>) : Promise<any> {
-    if (this.address != undefined) {
-      await call(this.address, 'update', update_arg_to_mich(a), params)
+    address: string | undefined;
+    get_address(): string | undefined {
+        return this.address;
     }
-  }
-  async push(e : Entrypoint, params : Partial<Parameters>) : Promise<any> {
-    if (this.address != undefined) {
-      await call(this.address, 'push', e.to_mich(), params)
+    async deploy(publickey: string, params: Partial<ex.Parameters>) {
+        const address = await ex.deploy("./contracts/oracle.arl", {
+            publickey: publickey
+        }, params);
+        this.address = address;
     }
-  }
-  async revoke(a : string, params : Partial<Parameters>) : Promise<any> {
-    if (this.address != undefined) {
-      await call(this.address, 'revoke', string_to_mich(a), params);
+    async update(upm: Array<[
+        string,
+        [
+            string,
+            oracleData_value
+        ]
+    ]>, params: Partial<ex.Parameters>): Promise<any> {
+        if (this.address != undefined) {
+            await ex.call(this.address, "update", update_arg_to_mich(upm), params);
+        }
     }
-  }
-  async get_oracleData(key : string) : Promise<oracleData | undefined> {
-    if (this.address != undefined) {
-      return await get_oracleData(this.address, key)
+    async push(normalizer: ex.Entrypoint, params: Partial<ex.Parameters>): Promise<any> {
+        if (this.address != undefined) {
+            await ex.call(this.address, "push", push_arg_to_mich(normalizer), params);
+        }
     }
-    else {
-      return undefined
+    async revoke(sig: string, params: Partial<ex.Parameters>): Promise<any> {
+        if (this.address != undefined) {
+            await ex.call(this.address, "revoke", revoke_arg_to_mich(sig), params);
+        }
     }
-  }
-  async get_state() : Promise<states> {
-    if(this.address != undefined) {
-      const storage = await get_storage(this.address)
-      const state = storage._state
-      if (state.toNumber() == 0) {
-        return states.Running
-      } else {
-        return states.Revoked
-      }
+    async get_oracleData_value(key: oracleData_key): Promise<oracleData_value | undefined> {
+        if (this.address != undefined) {
+            const storage = await ex.get_storage(this.address);
+            const data = await ex.get_big_map_value(BigInt(storage.oracleData), oracleData_key_to_mich(key), oracleData_key_mich_type);
+            if (data != undefined) {
+                return mich_to_oracleData_value(data);
+            }
+            else {
+                return undefined;
+            }
+        }
+        else {
+            return undefined;
+        }
     }
-    return states.Running
-  }
-  errors = {
-    INVALID_SIG : string_to_mich("bad sig"),
-    REVOKED     : string_to_mich("revoked")
-  }
+    async get_state(): Promise<states> {
+        if (this.address != undefined) {
+            const storage = await ex.get_storage(this.address);
+            const state = storage._state;
+            switch (state.toNumber()) {
+                case 0: return states.Running;
+                case 1: return states.Revoked;
+            }
+        }
+        return states.Running;
+    }
+    errors = {
+        INVALID_SIG: ex.string_to_mich("bad sig"),
+        REVOKED: ex.string_to_mich("revoked"),
+        BAD_REQUEST: ex.string_to_mich("bad request")
+    };
 }
-
-export const oracle = new Oracle()
+export const oracle = new Oracle();

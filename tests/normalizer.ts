@@ -2,7 +2,7 @@
 
 import { call, deploy, get_big_map_value, get_storage, Marray, mich_to_bigint, mich_to_date, mich_to_map, mich_to_pairs, Micheline, Mint, Mpair, Mstring, Parameters, prim_to_mich_type, string_to_mich } from '@completium/experiment-ts'
 
-import { oracleData, oracleData_container_to_mich } from './oracle';
+import { oracleData_container_to_mich, oracleData_value } from './oracle';
 
 /* assetMap ---------------------------------------------------------------- */
 
@@ -56,7 +56,7 @@ export class Normalizer {
     oracleContract : string,
     numDataPoints  : bigint,
     params         : Partial<Parameters>,
-    assetMap      ?: Map<string, oracleData>) {
+    assetMap      ?: Map<string, oracleData_value>) {
     const address = await deploy(
       './contracts/normalizer.arl',
       {
@@ -68,7 +68,7 @@ export class Normalizer {
     )
     this.address = address
   }
-  async update(a : Array< [ string, oracleData ] >, params : Partial<Parameters>) {
+  async update(a : Array< [ string, oracleData_value ] >, params : Partial<Parameters>) {
     if (this.address != undefined) {
       await call(
         this.address,

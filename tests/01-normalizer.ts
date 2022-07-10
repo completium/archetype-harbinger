@@ -4,7 +4,7 @@ import { Entrypoint, expect_to_fail, get_account, set_mockup, set_mockup_now, se
 
 import { asset1, sign_oracle_data } from './00-oracle'
 import { normalizer } from './normalizer'
-import { oracle, oracleData } from './oracle'
+import { oracle, oracleData_value } from './oracle'
 
 const assert = require('assert')
 
@@ -43,7 +43,7 @@ const numDataPoints = 3
 
 let update_entry : Entrypoint
 
-const input0 : oracleData = {
+const input0 : oracleData_value = {
   start  : new Date('2020-07-18T22:35:01Z'),
   end    : new Date('2020-07-18T22:35:31Z'),
   open   : BigInt(3059701),
@@ -52,7 +52,7 @@ const input0 : oracleData = {
   close  : BigInt(3),
   volume : BigInt(4)
 }
-const input1 : oracleData = {
+const input1 : oracleData_value = {
   start  : new Date('1970-01-01T00:00:01Z'),
   end    : new Date('1970-01-01T00:00:02Z'),
   open   : BigInt(1),
@@ -61,7 +61,7 @@ const input1 : oracleData = {
   close  : BigInt(4),
   volume : BigInt(5)
 }
-const input1_same_date : oracleData = {
+const input1_same_date : oracleData_value = {
   start  : new Date('1970-01-01T00:00:01Z'),
   end    : new Date('1970-01-01T00:00:02Z'),
   open   : BigInt(6),
@@ -70,7 +70,7 @@ const input1_same_date : oracleData = {
   close  : BigInt(9),
   volume : BigInt(10)
 }
-const input2 : oracleData = {
+const input2 : oracleData_value = {
   start  : new Date('1970-01-01T00:00:03Z'),
   end    : new Date('1970-01-01T00:00:04Z'),
   open   : BigInt(6),
@@ -79,7 +79,7 @@ const input2 : oracleData = {
   close  : BigInt(9),
   volume : BigInt(10)
 }
-const input3 : oracleData = {
+const input3 : oracleData_value = {
   start  : new Date('1970-01-01T00:00:05Z'),
   end    : new Date('1970-01-01T00:00:06Z'),
   open   : BigInt(11),
@@ -88,7 +88,7 @@ const input3 : oracleData = {
   close  : BigInt(14),
   volume : BigInt(15)
 }
-const input4 : oracleData = {
+const input4 : oracleData_value = {
   start  : new Date('1970-01-01T00:00:07Z'),
   end    : new Date('1970-01-01T00:00:08Z'),
   open   : BigInt(16),
@@ -97,7 +97,7 @@ const input4 : oracleData = {
   close  : BigInt(19),
   volume : BigInt(20)
 }
-const input5 : oracleData = {
+const input5 : oracleData_value = {
   start  : new Date('1970-01-01T00:00:09Z'),
   end    : new Date('1970-01-01T00:00:10Z'),
   open   : BigInt(21),
@@ -106,7 +106,7 @@ const input5 : oracleData = {
   close  : BigInt(24),
   volume : BigInt(25)
 }
-const input6 : oracleData = {
+const input6 : oracleData_value = {
   start  : new Date('1970-01-01T00:00:11Z'),
   end    : new Date('1970-01-01T00:00:12Z'),
   open   : BigInt(26),
