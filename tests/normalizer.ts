@@ -1,19 +1,6 @@
 /* Imports ----------------------------------------------------------------- */
 
-import {
-  Mint,
-  Mstring,
-  Mpair,
-  Parameters,
-  Micheline,
-  deploy,
-  call,
-  get_storage,
-  string_to_mich,
-  get_big_map_value,
-  prim_to_mich_type,
-  Marray
-} from '@completium/experiment-ts'
+import { call, deploy, get_big_map_value, get_storage, Marray, mich_to_bigint, mich_to_date, mich_to_map, mich_to_pairs, Micheline, Mint, Mpair, Mstring, Parameters, prim_to_mich_type, string_to_mich } from '@completium/experiment-ts'
 
 import { oracleData, oracleData_container_to_mich } from './oracle';
 
@@ -28,9 +15,33 @@ export interface queue {
 
 export interface assetMap {
   computedPrice  : bigint
-  lastUpdateTime : string
+  lastUpdateTime : Date
   prices         : queue
   volumes        : queue
+}
+
+/* Mich to records */
+
+const mich_to_queue = (v : Micheline) : queue => {
+  const fields = mich_to_pairs(v)
+  return {
+    first : mich_to_bigint(fields[0]),
+    last  : mich_to_bigint(fields[1]),
+    sum   : mich_to_bigint(fields[2]),
+    saved : mich_to_map(fields[3], (x, y) => {
+      return [ mich_to_bigint(x), mich_to_bigint(y) ]
+    })
+  }
+}
+
+const mich_to_assetMap = (v : Micheline) : assetMap => {
+  const fields = mich_to_pairs(v)
+  return {
+    computedPrice : mich_to_bigint(fields[0]),
+    lastUpdateTime : mich_to_date(fields[1]),
+    prices : mich_to_queue(fields[2]),
+    volumes : mich_to_queue({ prim: "Pair", args: fields.slice(3) })
+  }
 }
 
 /* Normalizer ------------------------------------------------------------- */
@@ -74,33 +85,7 @@ export class Normalizer {
         string_to_mich(key),
         prim_to_mich_type("string"))
       if (data != undefined) {
-        //console.log(JSON.stringify(data,null,2))
-        return {
-          computedPrice : BigInt(((data as Mpair)["args"][0] as Mint)["int"]),
-          lastUpdateTime : ((data as Mpair)["args"][1] as Mstring)["string"],
-          prices : {
-            first : BigInt((((data as Mpair)["args"][2] as Mpair)["args"][0] as Mint)["int"]),
-            last  : BigInt((((data as Mpair)["args"][2] as Mpair)["args"][1] as Mint)["int"]),
-            sum   : BigInt((((data as Mpair)["args"][2] as Mpair)["args"][2] as Mint)["int"]),
-            saved : (((data as Mpair)["args"][2] as Mpair)["args"][3] as Marray).map((x : Micheline) => {
-              return [
-                BigInt(((x as Mpair)["args"][0] as Mint)["int"]),
-                BigInt(((x as Mpair)["args"][1] as Mint)["int"])
-              ]
-            })
-          },
-          volumes : {
-            first : BigInt(((data as Mpair)["args"][3] as Mint)["int"]),
-            last  : BigInt(((data as Mpair)["args"][4] as Mint)["int"]),
-            sum   : BigInt(((data as Mpair)["args"][5] as Mint)["int"]),
-            saved : ((data as Mpair)["args"][6] as Marray).map((x : any) => {
-              return [
-                BigInt(((x as Mpair)["args"][0] as Mint)["int"]),
-                BigInt(((x as Mpair)["args"][1] as Mint)["int"])
-              ]
-            })
-          }
-        }
+        return mich_to_assetMap(data)
       } else {
         return undefined
       }

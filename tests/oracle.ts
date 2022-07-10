@@ -1,6 +1,6 @@
 /* Imports ----------------------------------------------------------------- */
 
-import { bigint_to_mich, call, date_to_mich, deploy, elt_to_mich, Entrypoint, get_big_map_value, get_storage, list_to_mich, Micheline, MichelineType, Mint, Mpair, Mstring, pair_array_to_mich_type, pair_to_mich, Parameters, prim_annot_to_mich_type, prim_to_mich_type, string_to_mich } from '@completium/experiment-ts'
+import { bigint_to_mich, call, date_to_mich, deploy, elt_to_mich, Entrypoint, get_big_map_value, get_storage, list_to_mich, mich_to_bigint, mich_to_date, mich_to_pairs, Micheline, MichelineType, Mint, Mpair, Mstring, pair_array_to_mich_type, pair_to_mich, Parameters, prim_annot_to_mich_type, prim_to_mich_type, string_to_mich } from '@completium/experiment-ts'
 
 /* OracleData -------------------------------------------------------------- */
 
@@ -38,6 +38,19 @@ export const oracleData_to_mich = (v : oracleData) : Micheline => {
   ])
 }
 
+export const mich_to_oracleData = (v : Micheline) : oracleData => {
+  const fields = mich_to_pairs(v)
+  return {
+    start  : mich_to_date(fields[0]),
+    end    : mich_to_date(fields[1]),
+    open   : mich_to_bigint(fields[2]),
+    high   : mich_to_bigint(fields[3]),
+    low    : mich_to_bigint(fields[4]),
+    close  : mich_to_bigint(fields[5]),
+    volume : mich_to_bigint(fields[6])
+  }
+}
+
 export const oracleData_type : any =
   pair_array_to_mich_type([
     prim_annot_to_mich_type("timestamp", ["%start"]),
@@ -60,15 +73,7 @@ const get_oracleData = async (address : string, key : string) : Promise<oracleDa
     string_to_mich(key),
     prim_to_mich_type("string"))
   if (data != undefined) {
-    return {
-      start  : new Date(((data as Mpair)["args"][0] as Mstring)["string"]),
-      end    : new Date(((data as Mpair)["args"][1] as Mstring)["string"]),
-      open   : BigInt(((data as Mpair)["args"][2] as Mint)["int"]),
-      high   : BigInt(((data as Mpair)["args"][3] as Mint)["int"]),
-      low    : BigInt(((data as Mpair)["args"][4] as Mint)["int"]),
-      close  : BigInt(((data as Mpair)["args"][5] as Mint)["int"]),
-      volume : BigInt(((data as Mpair)["args"][6] as Mint)["int"])
-    }
+    return mich_to_oracleData(data)
   } else {
     return undefined
   }
