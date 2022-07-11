@@ -156,7 +156,7 @@ describe('[Normalizer] Update', async () => {
       as: alice
     })
     await oracle.push(update_entry, { as : alice })
-    const assetMap = await normalizer.get_assetMap(asset1)
+    const assetMap = await normalizer.get_assetMap_value(asset1)
     if (assetMap != undefined) {
       assert(assetMap.computedPrice == quotient(VWAP1, input1.volume))
     } else {
@@ -169,7 +169,7 @@ describe('[Normalizer] Update', async () => {
       as: alice
     })
     await oracle.push(update_entry, { as : alice })
-    const assetMap = await normalizer.get_assetMap(asset1)
+    const assetMap = await normalizer.get_assetMap_value(asset1)
     if (assetMap != undefined) {
       assert(assetMap.computedPrice == quotient(VWAP1, input1.volume))
       assert(assetMap.prices.saved.length == 1)
@@ -183,7 +183,7 @@ describe('[Normalizer] Update', async () => {
       as: alice
     })
     await oracle.push(update_entry, { as : alice })
-    const assetMap = await normalizer.get_assetMap(asset1)
+    const assetMap = await normalizer.get_assetMap_value(asset1)
     if (assetMap != undefined) {
       assert(assetMap.computedPrice == quotient(VWAP1 + VWAP2, input1.volume + input2.volume))
       assert(assetMap.prices.saved.length == 2)
@@ -197,7 +197,7 @@ describe('[Normalizer] Update', async () => {
       as: alice
     })
     await oracle.push(update_entry, { as : alice })
-    const assetMap = await normalizer.get_assetMap(asset1)
+    const assetMap = await normalizer.get_assetMap_value(asset1)
     if (assetMap != undefined) {
       assert(assetMap.computedPrice == quotient(VWAP1 + VWAP2 + VWAP3, input1.volume + input2.volume + input3.volume))
       assert(assetMap.prices.saved.length == 3)
@@ -211,7 +211,7 @@ describe('[Normalizer] Update', async () => {
       as: alice
     })
     await oracle.push(update_entry, { as : alice })
-    const assetMap = await normalizer.get_assetMap(asset1)
+    const assetMap = await normalizer.get_assetMap_value(asset1)
     if (assetMap != undefined) {
       assert(assetMap.computedPrice == quotient(VWAP2 + VWAP3 + VWAP4, input2.volume + input3.volume + input4.volume))
       assert(assetMap.prices.saved.length == 3)
@@ -225,7 +225,7 @@ describe('[Normalizer] Update', async () => {
       as: alice
     })
     await oracle.push(update_entry, { as : alice })
-    const assetMap = await normalizer.get_assetMap(asset1)
+    const assetMap = await normalizer.get_assetMap_value(asset1)
     if (assetMap != undefined) {
       assert(assetMap.computedPrice == quotient(VWAP3 + VWAP4 + VWAP5, input3.volume + input4.volume + input5.volume))
       assert(assetMap.prices.saved.length == 3)
@@ -239,7 +239,7 @@ describe('[Normalizer] Update', async () => {
       as: alice
     })
     await oracle.push(update_entry, { as : alice })
-    const assetMap = await normalizer.get_assetMap(asset1)
+    const assetMap = await normalizer.get_assetMap_value(asset1)
     if (assetMap != undefined) {
       assert(assetMap.computedPrice == quotient(VWAP4 + VWAP5 + VWAP6, input4.volume + input5.volume + input6.volume))
       assert(assetMap.prices.saved.length == 3)
