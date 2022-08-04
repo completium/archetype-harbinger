@@ -1,32 +1,32 @@
 import * as ex from "@completium/experiment-ts";
 
 export interface queue {
-    first: bigint;
-    last: bigint;
-    sum: bigint;
+    first: ex.Int;
+    last: ex.Int;
+    sum: ex.Nat;
     saved: Array<[
-        bigint,
-        bigint
+        ex.Int,
+        ex.Nat
     ]>;
 }
 export interface update_param {
     start: Date;
     end: Date;
-    open: bigint;
-    high: bigint;
-    low: bigint;
-    close: bigint;
-    volume: bigint;
+    open: ex.Nat;
+    high: ex.Nat;
+    low: ex.Nat;
+    close: ex.Nat;
+    volume: ex.Nat;
 }
 export const queue_to_mich = (x: queue): ex.Micheline => {
-    return ex.pair_to_mich([ex.bigint_to_mich(x.first), ex.pair_to_mich([ex.bigint_to_mich(x.last), ex.pair_to_mich([ex.bigint_to_mich(x.sum), ex.list_to_mich(x.saved, x => {
+    return ex.pair_to_mich([x.first.to_mich(), ex.pair_to_mich([x.last.to_mich(), ex.pair_to_mich([x.sum.to_mich(), ex.list_to_mich(x.saved, x => {
                     const x_key = x[0];
                     const x_value = x[1];
-                    return ex.elt_to_mich(ex.bigint_to_mich(x_key), ex.bigint_to_mich(x_value));
+                    return ex.elt_to_mich(x_key.to_mich(), x_value.to_mich());
                 })])])]);
 };
 export const update_param_to_mich = (x: update_param): ex.Micheline => {
-    return ex.pair_to_mich([ex.date_to_mich(x.start), ex.pair_to_mich([ex.date_to_mich(x.end), ex.pair_to_mich([ex.bigint_to_mich(x.open), ex.pair_to_mich([ex.bigint_to_mich(x.high), ex.pair_to_mich([ex.bigint_to_mich(x.low), ex.pair_to_mich([ex.bigint_to_mich(x.close), ex.bigint_to_mich(x.volume)])])])])])]);
+    return ex.pair_to_mich([ex.date_to_mich(x.start), ex.pair_to_mich([ex.date_to_mich(x.end), ex.pair_to_mich([x.open.to_mich(), ex.pair_to_mich([x.high.to_mich(), ex.pair_to_mich([x.low.to_mich(), ex.pair_to_mich([x.close.to_mich(), x.volume.to_mich()])])])])])]);
 };
 export const queue_mich_type: ex.MichelineType = ex.pair_array_to_mich_type([
     ex.prim_annot_to_mich_type("int", ["%first"]),
@@ -59,11 +59,11 @@ export const update_param_mich_type: ex.MichelineType = ex.pair_array_to_mich_ty
 ]);
 export const mich_to_queue = (v: ex.Micheline): queue => {
     const fields = ex.mich_to_pairs(v);
-    return { first: ex.mich_to_bigint(fields[0]), last: ex.mich_to_bigint(fields[1]), sum: ex.mich_to_bigint(fields[2]), saved: ex.mich_to_map(fields[3], (x, y) => [ex.mich_to_bigint(x), ex.mich_to_bigint(y)]) };
+    return { first: ex.mich_to_int(fields[0]), last: ex.mich_to_int(fields[1]), sum: ex.mich_to_nat(fields[2]), saved: ex.mich_to_map(fields[3], (x, y) => [ex.mich_to_int(x), ex.mich_to_nat(y)]) };
 };
 export const mich_to_update_param = (v: ex.Micheline): update_param => {
     const fields = ex.mich_to_pairs(v);
-    return { start: ex.mich_to_date(fields[0]), end: ex.mich_to_date(fields[1]), open: ex.mich_to_bigint(fields[2]), high: ex.mich_to_bigint(fields[3]), low: ex.mich_to_bigint(fields[4]), close: ex.mich_to_bigint(fields[5]), volume: ex.mich_to_bigint(fields[6]) };
+    return { start: ex.mich_to_date(fields[0]), end: ex.mich_to_date(fields[1]), open: ex.mich_to_nat(fields[2]), high: ex.mich_to_nat(fields[3]), low: ex.mich_to_nat(fields[4]), close: ex.mich_to_nat(fields[5]), volume: ex.mich_to_nat(fields[6]) };
 };
 export const queue_cmp = (a: queue, b: queue) => {
     return (a.first == b.first && a.last == b.last && a.sum == b.sum && a.saved == b.saved);
@@ -77,21 +77,13 @@ export const assetMap_key_to_mich = (x: assetMap_key): ex.Micheline => {
 };
 export const assetMap_key_mich_type: ex.MichelineType = ex.prim_annot_to_mich_type("string", []);
 export interface assetMap_value {
-    computedPrice: bigint;
+    computedPrice: ex.Nat;
     lastUpdateTime: Date;
     prices: queue;
     volumes: queue;
 }
 export const assetMap_value_to_mich = (x: assetMap_value): ex.Micheline => {
-    return ex.pair_to_mich([ex.bigint_to_mich(x.computedPrice), ex.pair_to_mich([ex.date_to_mich(x.lastUpdateTime), ex.pair_to_mich([ex.pair_to_mich([ex.bigint_to_mich(x.prices.first), ex.pair_to_mich([ex.bigint_to_mich(x.prices.last), ex.pair_to_mich([ex.bigint_to_mich(x.prices.sum), ex.list_to_mich(x.prices.saved, x => {
-                                const x_key = x[0];
-                                const x_value = x[1];
-                                return ex.elt_to_mich(ex.bigint_to_mich(x_key), ex.bigint_to_mich(x_value));
-                            })])])]), ex.pair_to_mich([ex.bigint_to_mich(x.volumes.first), ex.pair_to_mich([ex.bigint_to_mich(x.volumes.last), ex.pair_to_mich([ex.bigint_to_mich(x.volumes.sum), ex.list_to_mich(x.volumes.saved, x => {
-                                const x_key = x[0];
-                                const x_value = x[1];
-                                return ex.elt_to_mich(ex.bigint_to_mich(x_key), ex.bigint_to_mich(x_value));
-                            })])])])])])]);
+    return ex.pair_to_mich([x.computedPrice.to_mich(), ex.pair_to_mich([ex.date_to_mich(x.lastUpdateTime), ex.pair_to_mich([queue_to_mich(x.prices), queue_to_mich(x.volumes)])])]);
 };
 export const assetMap_value_mich_type: ex.MichelineType = ex.pair_array_to_mich_type([
     ex.prim_annot_to_mich_type("nat", ["%computedPrice"]),
@@ -123,7 +115,7 @@ export const assetMap_value_mich_type: ex.MichelineType = ex.pair_array_to_mich_
 ]);
 export const mich_to_assetMap_value = (v: ex.Micheline): assetMap_value => {
     const fields = ex.mich_to_pairs(v);
-    return { computedPrice: ex.mich_to_bigint(fields[0]), lastUpdateTime: ex.mich_to_date(fields[1]), prices: mich_to_queue(fields[2]), volumes: mich_to_queue({ prim: "Pair", args: fields.slice(3) }) };
+    return { computedPrice: ex.mich_to_nat(fields[0]), lastUpdateTime: ex.mich_to_date(fields[1]), prices: mich_to_queue(fields[2]), volumes: mich_to_queue({ prim: "Pair", args: fields.slice(3) }) };
 };
 export const assetMap_value_cmp = (a: assetMap_value, b: assetMap_value) => {
     return (a.computedPrice == b.computedPrice && a.lastUpdateTime.toISOString() == b.lastUpdateTime.toISOString() && a.prices == b.prices && a.volumes == b.volumes);
@@ -136,15 +128,7 @@ export const assetMap_container_to_mich = (x: assetMap_container): ex.Micheline 
     return ex.list_to_mich(x, x => {
         const x_key = x[0];
         const x_value = x[1];
-        return ex.elt_to_mich(ex.string_to_mich(x_key), ex.pair_to_mich([ex.bigint_to_mich(x_value.computedPrice), ex.pair_to_mich([ex.date_to_mich(x_value.lastUpdateTime), ex.pair_to_mich([ex.pair_to_mich([ex.bigint_to_mich(x_value.prices.first), ex.pair_to_mich([ex.bigint_to_mich(x_value.prices.last), ex.pair_to_mich([ex.bigint_to_mich(x_value.prices.sum), ex.list_to_mich(x_value.prices.saved, x => {
-                                    const x_key = x[0];
-                                    const x_value = x[1];
-                                    return ex.elt_to_mich(ex.bigint_to_mich(x_key), ex.bigint_to_mich(x_value));
-                                })])])]), ex.pair_to_mich([ex.bigint_to_mich(x_value.volumes.first), ex.pair_to_mich([ex.bigint_to_mich(x_value.volumes.last), ex.pair_to_mich([ex.bigint_to_mich(x_value.volumes.sum), ex.list_to_mich(x_value.volumes.saved, x => {
-                                    const x_key = x[0];
-                                    const x_value = x[1];
-                                    return ex.elt_to_mich(ex.bigint_to_mich(x_key), ex.bigint_to_mich(x_value));
-                                })])])])])])]));
+        return ex.elt_to_mich(ex.string_to_mich(x_key), ex.pair_to_mich([x_value.computedPrice.to_mich(), ex.pair_to_mich([ex.date_to_mich(x_value.lastUpdateTime), ex.pair_to_mich([queue_to_mich(x_value.prices), queue_to_mich(x_value.volumes)])])]));
     });
 };
 export const assetMap_container_mich_type: ex.MichelineType = ex.pair_to_mich_type("big_map", ex.prim_annot_to_mich_type("string", []), ex.pair_array_to_mich_type([
@@ -190,7 +174,7 @@ export class Normalizer {
     get_address(): string | undefined {
         return this.address;
     }
-    async deploy(assetCodes: Array<string>, oracleContract: string, numDataPoints: bigint, params: Partial<ex.Parameters>) {
+    async deploy(assetCodes: Array<string>, oracleContract: string, numDataPoints: ex.Nat, params: Partial<ex.Parameters>) {
         const address = await ex.deploy("./contracts/normalizer.arl", {
             assetCodes: assetCodes,
             oracleContract: oracleContract,

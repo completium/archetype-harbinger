@@ -1,6 +1,6 @@
 /* Imports ----------------------------------------------------------------- */
 
-import { Entrypoint, expect_to_fail, get_account, set_mockup, set_mockup_now, set_quiet } from '@completium/experiment-ts'
+import { Entrypoint, expect_to_fail, get_account, Nat, set_mockup, set_mockup_now, set_quiet } from '@completium/experiment-ts'
 
 import { asset1, sign_oracle_data } from './00-oracle'
 import { normalizer } from './normalizer'
@@ -27,14 +27,12 @@ set_mockup_now(new Date(Date.now()))
 /* Utils ------------------------------------------------------------------- */
 
 // Should implement real euclidean division
-const quotient = (a : bigint, b : bigint) : bigint => {
-  const an = Number(a)
-  const bn = Number(b)
-  return BigInt(Math.floor(an/bn))
+const quotient = (a : Nat, b : Nat) : Nat => {
+  return new Nat(a.div(b).floor())
 }
 
-const computeVWAP = (high : bigint, low : bigint, close : bigint, volume : bigint) : bigint => {
-  return (quotient(high + low + close, BigInt(3))) * volume
+const computeVWAP = (high : Nat, low : Nat, close : Nat, volume : Nat) : Nat => {
+  return (quotient(high.plus(low).plus(close), new Nat(3))).times(volume)
 }
 
 /* Data -------------------------------------------------------------------- */
@@ -46,74 +44,74 @@ let update_entry : Entrypoint
 const input0 : oracleData_value = {
   start  : new Date('2020-07-18T22:35:01Z'),
   end    : new Date('2020-07-18T22:35:31Z'),
-  open   : BigInt(3059701),
-  high   : BigInt(1),
-  low    : BigInt(2),
-  close  : BigInt(3),
-  volume : BigInt(4)
+  open   : new Nat(3059701),
+  high   : new Nat(1),
+  low    : new Nat(2),
+  close  : new Nat(3),
+  volume : new Nat(4)
 }
 const input1 : oracleData_value = {
   start  : new Date('1970-01-01T00:00:01Z'),
   end    : new Date('1970-01-01T00:00:02Z'),
-  open   : BigInt(1),
-  high   : BigInt(2),
-  low    : BigInt(3),
-  close  : BigInt(4),
-  volume : BigInt(5)
+  open   : new Nat(1),
+  high   : new Nat(2),
+  low    : new Nat(3),
+  close  : new Nat(4),
+  volume : new Nat(5)
 }
 const input1_same_date : oracleData_value = {
   start  : new Date('1970-01-01T00:00:01Z'),
   end    : new Date('1970-01-01T00:00:02Z'),
-  open   : BigInt(6),
-  high   : BigInt(7),
-  low    : BigInt(8),
-  close  : BigInt(9),
-  volume : BigInt(10)
+  open   : new Nat(6),
+  high   : new Nat(7),
+  low    : new Nat(8),
+  close  : new Nat(9),
+  volume : new Nat(10)
 }
 const input2 : oracleData_value = {
   start  : new Date('1970-01-01T00:00:03Z'),
   end    : new Date('1970-01-01T00:00:04Z'),
-  open   : BigInt(6),
-  high   : BigInt(7),
-  low    : BigInt(8),
-  close  : BigInt(9),
-  volume : BigInt(10)
+  open   : new Nat(6),
+  high   : new Nat(7),
+  low    : new Nat(8),
+  close  : new Nat(9),
+  volume : new Nat(10)
 }
 const input3 : oracleData_value = {
   start  : new Date('1970-01-01T00:00:05Z'),
   end    : new Date('1970-01-01T00:00:06Z'),
-  open   : BigInt(11),
-  high   : BigInt(12),
-  low    : BigInt(13),
-  close  : BigInt(14),
-  volume : BigInt(15)
+  open   : new Nat(11),
+  high   : new Nat(12),
+  low    : new Nat(13),
+  close  : new Nat(14),
+  volume : new Nat(15)
 }
 const input4 : oracleData_value = {
   start  : new Date('1970-01-01T00:00:07Z'),
   end    : new Date('1970-01-01T00:00:08Z'),
-  open   : BigInt(16),
-  high   : BigInt(17),
-  low    : BigInt(18),
-  close  : BigInt(19),
-  volume : BigInt(20)
+  open   : new Nat(16),
+  high   : new Nat(17),
+  low    : new Nat(18),
+  close  : new Nat(19),
+  volume : new Nat(20)
 }
 const input5 : oracleData_value = {
   start  : new Date('1970-01-01T00:00:09Z'),
   end    : new Date('1970-01-01T00:00:10Z'),
-  open   : BigInt(21),
-  high   : BigInt(22),
-  low    : BigInt(23),
-  close  : BigInt(24),
-  volume : BigInt(25)
+  open   : new Nat(21),
+  high   : new Nat(22),
+  low    : new Nat(23),
+  close  : new Nat(24),
+  volume : new Nat(25)
 }
 const input6 : oracleData_value = {
   start  : new Date('1970-01-01T00:00:11Z'),
   end    : new Date('1970-01-01T00:00:12Z'),
-  open   : BigInt(26),
-  high   : BigInt(27),
-  low    : BigInt(28),
-  close  : BigInt(29),
-  volume : BigInt(30)
+  open   : new Nat(26),
+  high   : new Nat(27),
+  low    : new Nat(28),
+  close  : new Nat(29),
+  volume : new Nat(30)
 }
 const VWAP1 = computeVWAP(input1.high, input1.low, input1.close, input1.volume)
 const VWAP2 = computeVWAP(input2.high, input2.low, input2.close, input2.volume)
@@ -131,7 +129,7 @@ describe('[Normalizer] Contracts deployment', async () => {
   it('Deploy Normalizer', async () => {
     const oracle_addr = oracle.get_address()
     if (oracle_addr != undefined) {
-      await normalizer.deploy(["XTZ-USD", "BTC-USD"], oracle_addr, BigInt(numDataPoints),  { as: alice })
+      await normalizer.deploy(["XTZ-USD", "BTC-USD"], oracle_addr, new Nat(numDataPoints),  { as: alice })
     } else {
       assert(false)
     }
@@ -158,7 +156,7 @@ describe('[Normalizer] Update', async () => {
     await oracle.push(update_entry, { as : alice })
     const assetMap = await normalizer.get_assetMap_value(asset1)
     if (assetMap != undefined) {
-      assert(assetMap.computedPrice == quotient(VWAP1, input1.volume))
+      assert(assetMap.computedPrice.equals(new Nat(VWAP1.div(input1.volume).floor())))
     } else {
       assert(false)
     }
@@ -171,7 +169,7 @@ describe('[Normalizer] Update', async () => {
     await oracle.push(update_entry, { as : alice })
     const assetMap = await normalizer.get_assetMap_value(asset1)
     if (assetMap != undefined) {
-      assert(assetMap.computedPrice == quotient(VWAP1, input1.volume))
+      assert(assetMap.computedPrice.equals(quotient(VWAP1, input1.volume)))
       assert(assetMap.prices.saved.length == 1)
     } else {
       assert(false)
@@ -185,7 +183,7 @@ describe('[Normalizer] Update', async () => {
     await oracle.push(update_entry, { as : alice })
     const assetMap = await normalizer.get_assetMap_value(asset1)
     if (assetMap != undefined) {
-      assert(assetMap.computedPrice == quotient(VWAP1 + VWAP2, input1.volume + input2.volume))
+      assert(assetMap.computedPrice.equals(quotient(VWAP1.plus(VWAP2), input1.volume.plus(input2.volume))))
       assert(assetMap.prices.saved.length == 2)
     } else {
       assert(false)
@@ -199,7 +197,7 @@ describe('[Normalizer] Update', async () => {
     await oracle.push(update_entry, { as : alice })
     const assetMap = await normalizer.get_assetMap_value(asset1)
     if (assetMap != undefined) {
-      assert(assetMap.computedPrice == quotient(VWAP1 + VWAP2 + VWAP3, input1.volume + input2.volume + input3.volume))
+      assert(assetMap.computedPrice.equals(quotient(VWAP1.plus(VWAP2).plus(VWAP3), input1.volume.plus(input2.volume).plus(input3.volume))))
       assert(assetMap.prices.saved.length == 3)
     } else {
       assert(false)
@@ -213,7 +211,7 @@ describe('[Normalizer] Update', async () => {
     await oracle.push(update_entry, { as : alice })
     const assetMap = await normalizer.get_assetMap_value(asset1)
     if (assetMap != undefined) {
-      assert(assetMap.computedPrice == quotient(VWAP2 + VWAP3 + VWAP4, input2.volume + input3.volume + input4.volume))
+      assert(assetMap.computedPrice.equals(quotient(VWAP2.plus(VWAP3).plus(VWAP4), input2.volume.plus(input3.volume).plus(input4.volume))))
       assert(assetMap.prices.saved.length == 3)
     } else {
       assert(false)
@@ -227,7 +225,7 @@ describe('[Normalizer] Update', async () => {
     await oracle.push(update_entry, { as : alice })
     const assetMap = await normalizer.get_assetMap_value(asset1)
     if (assetMap != undefined) {
-      assert(assetMap.computedPrice == quotient(VWAP3 + VWAP4 + VWAP5, input3.volume + input4.volume + input5.volume))
+      assert(assetMap.computedPrice.equals(quotient(VWAP3.plus(VWAP4).plus(VWAP5), input3.volume.plus(input4.volume).plus(input5.volume))))
       assert(assetMap.prices.saved.length == 3)
     } else {
       assert(false)
@@ -241,7 +239,7 @@ describe('[Normalizer] Update', async () => {
     await oracle.push(update_entry, { as : alice })
     const assetMap = await normalizer.get_assetMap_value(asset1)
     if (assetMap != undefined) {
-      assert(assetMap.computedPrice == quotient(VWAP4 + VWAP5 + VWAP6, input4.volume + input5.volume + input6.volume))
+      assert(assetMap.computedPrice.equals(quotient(VWAP4.plus(VWAP5).plus(VWAP6), input4.volume.plus(input5.volume).plus(input6.volume))))
       assert(assetMap.prices.saved.length == 3)
     } else {
       assert(false)

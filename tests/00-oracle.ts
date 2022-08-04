@@ -1,6 +1,6 @@
 /* Imports ----------------------------------------------------------------- */
 
-import { Account, expect_to_fail, get_account, none_mich, option_to_mich_type, pack, pair_array_to_mich_type, pair_to_mich, pair_to_mich_type, prim_to_mich_type, set_mockup, set_mockup_now, set_quiet, sign, string_to_mich } from '@completium/experiment-ts'
+import { Account, expect_to_fail, get_account, Nat, none_mich, option_to_mich_type, pack, pair_array_to_mich_type, pair_to_mich, pair_to_mich_type, prim_to_mich_type, set_mockup, set_mockup_now, set_quiet, sign, string_to_mich } from '@completium/experiment-ts'
 
 const assert = require('assert')
 
@@ -54,47 +54,47 @@ const asset_untracked = "XTZ-BTC"
 const input1 : oracleData_value = {
   start  : new Date('1970-01-01T00:00:01Z'),
   end    : new Date('1970-01-01T00:00:02Z'),
-  open   : BigInt(3),
-  high   : BigInt(4),
-  low    : BigInt(5),
-  close  : BigInt(6),
-  volume : BigInt(7)
+  open   : new Nat(3),
+  high   : new Nat(4),
+  low    : new Nat(5),
+  close  : new Nat(6),
+  volume : new Nat(7)
 }
 const input2 : oracleData_value  = {
   start  : new Date('1970-01-01T00:00:08Z'),
   end    : new Date('1970-01-01T00:00:09Z'),
-  open   : BigInt(10),
-  high   : BigInt(11),
-  low    : BigInt(12),
-  close  : BigInt(13),
-  volume : BigInt(14)
+  open   : new Nat(10),
+  high   : new Nat(11),
+  low    : new Nat(12),
+  close  : new Nat(13),
+  volume : new Nat(14)
 }
 const input_past : oracleData_value  = {
   start  : new Date('1970-01-01T00:00:08Z'),
   end    : new Date('1970-01-01T00:00:09Z'),
-  open   : BigInt(15),
-  high   : BigInt(16),
-  low    : BigInt(17),
-  close  : BigInt(18),
-  volume : BigInt(19)
+  open   : new Nat(15),
+  high   : new Nat(16),
+  low    : new Nat(17),
+  close  : new Nat(18),
+  volume : new Nat(19)
 }
 const input3 : oracleData_value = {
   start  : new Date('1970-01-01T00:00:15Z'),
   end    : new Date('1970-01-01T00:00:16Z'),
-  open   : BigInt(17),
-  high   : BigInt(18),
-  low    : BigInt(19),
-  close  : BigInt(20),
-  volume : BigInt(21)
+  open   : new Nat(17),
+  high   : new Nat(18),
+  low    : new Nat(19),
+  close  : new Nat(20),
+  volume : new Nat(21)
 }
 const input4 : oracleData_value = {
   start  : new Date('1970-01-01T00:00:22Z'),
   end    : new Date('1970-01-01T00:00:23Z'),
-  open   : BigInt(24),
-  high   : BigInt(25),
-  low    : BigInt(26),
-  close  : BigInt(27),
-  volume : BigInt(28)
+  open   : new Nat(24),
+  high   : new Nat(25),
+  low    : new Nat(26),
+  close  : new Nat(27),
+  volume : new Nat(28)
 }
 
 /* Scenario ---------------------------------------------------------------- */

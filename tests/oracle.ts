@@ -12,14 +12,14 @@ export const oracleData_key_mich_type: ex.MichelineType = ex.prim_annot_to_mich_
 export interface oracleData_value {
     start: Date;
     end: Date;
-    open: bigint;
-    high: bigint;
-    low: bigint;
-    close: bigint;
-    volume: bigint;
+    open: ex.Nat;
+    high: ex.Nat;
+    low: ex.Nat;
+    close: ex.Nat;
+    volume: ex.Nat;
 }
 export const oracleData_value_to_mich = (x: oracleData_value): ex.Micheline => {
-    return ex.pair_to_mich([ex.date_to_mich(x.start), ex.pair_to_mich([ex.date_to_mich(x.end), ex.pair_to_mich([ex.bigint_to_mich(x.open), ex.pair_to_mich([ex.bigint_to_mich(x.high), ex.pair_to_mich([ex.bigint_to_mich(x.low), ex.pair_to_mich([ex.bigint_to_mich(x.close), ex.bigint_to_mich(x.volume)])])])])])]);
+    return ex.pair_to_mich([ex.date_to_mich(x.start), ex.pair_to_mich([ex.date_to_mich(x.end), ex.pair_to_mich([x.open.to_mich(), ex.pair_to_mich([x.high.to_mich(), ex.pair_to_mich([x.low.to_mich(), ex.pair_to_mich([x.close.to_mich(), x.volume.to_mich()])])])])])]);
 };
 export const oracleData_value_mich_type: ex.MichelineType = ex.pair_array_to_mich_type([
     ex.prim_annot_to_mich_type("timestamp", ["%start"]),
@@ -42,10 +42,10 @@ export const oracleData_value_mich_type: ex.MichelineType = ex.pair_array_to_mic
 ]);
 export const mich_to_oracleData_value = (v: ex.Micheline): oracleData_value => {
     const fields = ex.mich_to_pairs(v);
-    return { start: ex.mich_to_date(fields[0]), end: ex.mich_to_date(fields[1]), open: ex.mich_to_bigint(fields[2]), high: ex.mich_to_bigint(fields[3]), low: ex.mich_to_bigint(fields[4]), close: ex.mich_to_bigint(fields[5]), volume: ex.mich_to_bigint(fields[6]) };
+    return { start: ex.mich_to_date(fields[0]), end: ex.mich_to_date(fields[1]), open: ex.mich_to_nat(fields[2]), high: ex.mich_to_nat(fields[3]), low: ex.mich_to_nat(fields[4]), close: ex.mich_to_nat(fields[5]), volume: ex.mich_to_nat(fields[6]) };
 };
 export const oracleData_value_cmp = (a: oracleData_value, b: oracleData_value) => {
-    return (a.start.toISOString() == b.start.toISOString() && a.end.toISOString() == b.end.toISOString() && a.open == b.open && a.high == b.high && a.low == b.low && a.close == b.close && a.volume == b.volume);
+    return (a.start.toISOString() == b.start.toISOString() && a.end.toISOString() == b.end.toISOString() && a.open.equals(b.open) && a.high.equals(b.high) && a.low.equals(b.low) && a.close.equals(b.close) && a.volume.equals(b.volume));
 };
 export type oracleData_container = Array<[
     oracleData_key,
@@ -55,7 +55,7 @@ export const oracleData_container_to_mich = (x: oracleData_container): ex.Michel
     return ex.list_to_mich(x, x => {
         const x_key = x[0];
         const x_value = x[1];
-        return ex.elt_to_mich(ex.string_to_mich(x_key), ex.pair_to_mich([ex.date_to_mich(x_value.start), ex.pair_to_mich([ex.date_to_mich(x_value.end), ex.pair_to_mich([ex.bigint_to_mich(x_value.open), ex.pair_to_mich([ex.bigint_to_mich(x_value.high), ex.pair_to_mich([ex.bigint_to_mich(x_value.low), ex.pair_to_mich([ex.bigint_to_mich(x_value.close), ex.bigint_to_mich(x_value.volume)])])])])])]));
+        return ex.elt_to_mich(ex.string_to_mich(x_key), ex.pair_to_mich([ex.date_to_mich(x_value.start), ex.pair_to_mich([ex.date_to_mich(x_value.end), ex.pair_to_mich([x_value.open.to_mich(), ex.pair_to_mich([x_value.high.to_mich(), ex.pair_to_mich([x_value.low.to_mich(), ex.pair_to_mich([x_value.close.to_mich(), x_value.volume.to_mich()])])])])])]));
     });
 };
 export const oracleData_container_mich_type: ex.MichelineType = ex.pair_to_mich_type("big_map", ex.prim_annot_to_mich_type("string", []), ex.pair_array_to_mich_type([
@@ -156,8 +156,8 @@ export class Oracle {
     }
     errors = {
         INVALID_SIG: ex.string_to_mich("bad sig"),
-        REVOKED: ex.string_to_mich("revoked"),
-        BAD_REQUEST: ex.string_to_mich("bad request")
+        REVOKED: ex.string_to_mich("bad sig"),
+        BAD_REQUEST: ex.string_to_mich("bad sig")
     };
 }
 export const oracle = new Oracle();
