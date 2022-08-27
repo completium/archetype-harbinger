@@ -1,4 +1,3 @@
-
 import * as ex from "@completium/experiment-ts";
 export interface queue {
     first: ex.Int;

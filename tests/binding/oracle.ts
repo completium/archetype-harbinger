@@ -177,7 +177,8 @@ export class Oracle {
         INVALID_STATE: ex.string_to_mich("\"INVALID_STATE\""),
         r0: ex.string_to_mich("\"bad sig\""),
         BAD_SIG: ex.string_to_mich("\"bad sig\""),
-        REVOKED: ex.string_to_mich("\"revoked\"")
+        REVOKED: ex.string_to_mich("\"revoked\""),
+        BAD_REQUEST: ex.string_to_mich("\"bad request\"")
     };
 }
 export const oracle = new Oracle();
