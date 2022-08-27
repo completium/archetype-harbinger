@@ -3,8 +3,8 @@
 import { Entrypoint, expect_to_fail, get_account, Nat, set_mockup, set_mockup_now, set_quiet } from '@completium/experiment-ts'
 
 import { asset1, sign_oracle_data } from './00-oracle'
-import { normalizer } from './normalizer'
-import { oracle, oracleData_value } from './oracle'
+import { normalizer } from './binding/normalizer'
+import { oracle, oracleData_value } from './binding/oracle'
 
 const assert = require('assert')
 
@@ -28,7 +28,7 @@ set_mockup_now(new Date(Date.now()))
 
 // Should implement real euclidean division
 const quotient = (a : Nat, b : Nat) : Nat => {
-  return new Nat(a.div(b).floor())
+  return new Nat(a.div(b).floor().to_big_number())
 }
 
 const computeVWAP = (high : Nat, low : Nat, close : Nat, volume : Nat) : Nat => {
@@ -124,7 +124,7 @@ const VWAP6 = computeVWAP(input6.high, input6.low, input6.close, input6.volume)
 
 describe('[Normalizer] Contracts deployment', async () => {
   it('Deploy Oracle', async () => {
-    await oracle.deploy(alice.pubk, { as: alice })
+    await oracle.deploy(alice.get_public_key(), { as: alice })
   });
   it('Deploy Normalizer', async () => {
     const oracle_addr = oracle.get_address()
@@ -146,7 +146,7 @@ describe('[Normalizer] Update', async () => {
   it('Fails when data is pushed from bad address', async () => {
     expect_to_fail(async () => {
       await normalizer.update([ [ "XTZ-USD", input0 ] ], { as : alice })
-    }, normalizer.errors.INVALID_CALLER)
+    }, normalizer.errors.BAD_SENDER)
   })
   it('Correctly processes updates', async () => {
     const sig1 = await sign_oracle_data(asset1, input1, alice)
@@ -156,7 +156,7 @@ describe('[Normalizer] Update', async () => {
     await oracle.push(update_entry, { as : alice })
     const assetMap = await normalizer.get_assetMap_value(asset1)
     if (assetMap != undefined) {
-      assert(assetMap.computedPrice.equals(new Nat(VWAP1.div(input1.volume).floor())))
+      assert(assetMap.computedPrice.equals(new Nat(VWAP1.div(input1.volume).floor().to_big_number())))
     } else {
       assert(false)
     }

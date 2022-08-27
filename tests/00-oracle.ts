@@ -1,6 +1,6 @@
 /* Imports ----------------------------------------------------------------- */
 
-import { Account, expect_to_fail, get_account, Nat, none_mich, option_to_mich_type, pack, pair_array_to_mich_type, pair_to_mich, pair_to_mich_type, prim_to_mich_type, set_mockup, set_mockup_now, set_quiet, sign, string_to_mich } from '@completium/experiment-ts'
+import { Option, Account, expect_to_fail, get_account, Nat, option_to_mich_type, pack, pair_array_to_mich_type, pair_to_mich, pair_to_mich_type, prim_to_mich_type, set_mockup, set_mockup_now, set_quiet, sign, string_to_mich } from '@completium/experiment-ts'
 
 const assert = require('assert')
 
@@ -11,7 +11,7 @@ import {
   states,
   oracleData_value_to_mich,
   oracleData_value_mich_type
-} from './oracle'
+} from './binding/oracle'
 
 /* Accounts ---------------------------------------------------------------- */
 
@@ -40,9 +40,9 @@ export const sign_oracle_data = async (key : string, data : oracleData_value, si
 }
 
 export const sign_oracle_revoke = async (signer : Account) => {
-  const value = none_mich;
+  const value = Option.None();
   const type  = option_to_mich_type(prim_to_mich_type("key"))
-  const packed = pack(value, type)
+  const packed = pack(value.to_mich(), type)
   return await sign(packed, signer)
 }
 
@@ -101,7 +101,7 @@ const input4 : oracleData_value = {
 
 describe('[Oracle] Contract deployment', async () => {
   it('Deploy Oracle', async () => {
-    await oracle.deploy(alice.pubk, { as: alice })
+    await oracle.deploy(alice.get_public_key(), { as: alice })
   });
 })
 
@@ -144,7 +144,7 @@ describe('[Oracle] Update', async () => {
       await oracle.update([ [ asset1, [ sig, input3 ] ] ], {
         as: alice
       })
-    }, oracle.errors.INVALID_SIG)
+    }, oracle.errors.BAD_SIG)
   })
   it('Update with stale asset does not fail', async () => {
     const sig1 = await sign_oracle_data(asset1, input3, alice)
@@ -172,7 +172,7 @@ describe('[Oracle] Revoke', async () => {
     const sig = await sign_oracle_revoke(bob)
     expect_to_fail(async () => {
       await oracle.revoke(sig, { as : alice })
-    }, oracle.errors.INVALID_SIG)
+    }, oracle.errors.BAD_SIG)
   })
   it('Revoke Oracle', async () => {
     const sig = await sign_oracle_revoke(alice)

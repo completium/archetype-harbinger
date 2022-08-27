@@ -1,5 +1,4 @@
 import * as ex from "@completium/experiment-ts";
-
 export enum states {
     Running = 1,
     Revoked
@@ -40,12 +39,18 @@ export const oracleData_value_mich_type: ex.MichelineType = ex.pair_array_to_mic
         ])
     ])
 ]);
-export const mich_to_oracleData_value = (v: ex.Micheline): oracleData_value => {
-    const fields = ex.mich_to_pairs(v);
+export const mich_to_oracleData_value = (v: ex.Micheline, collapsed: boolean = false): oracleData_value => {
+    let fields = [];
+    if (collapsed) {
+        fields = ex.mich_to_pairs(v);
+    }
+    else {
+        fields = ex.annotated_mich_to_array(v, oracleData_value_mich_type);
+    }
     return { start: ex.mich_to_date(fields[0]), end: ex.mich_to_date(fields[1]), open: ex.mich_to_nat(fields[2]), high: ex.mich_to_nat(fields[3]), low: ex.mich_to_nat(fields[4]), close: ex.mich_to_nat(fields[5]), volume: ex.mich_to_nat(fields[6]) };
 };
 export const oracleData_value_cmp = (a: oracleData_value, b: oracleData_value) => {
-    return (a.start.toISOString() == b.start.toISOString() && a.end.toISOString() == b.end.toISOString() && a.open.equals(b.open) && a.high.equals(b.high) && a.low.equals(b.low) && a.close.equals(b.close) && a.volume.equals(b.volume));
+    return ((a.start.getTime() - a.start.getMilliseconds()) == (b.start.getTime() - b.start.getMilliseconds()) && (a.end.getTime() - a.end.getMilliseconds()) == (b.end.getTime() - b.end.getMilliseconds()) && a.open.equals(b.open) && a.high.equals(b.high) && a.low.equals(b.low) && a.close.equals(b.close) && a.volume.equals(b.volume));
 };
 export type oracleData_container = Array<[
     oracleData_key,
@@ -80,37 +85,46 @@ export const oracleData_container_mich_type: ex.MichelineType = ex.pair_to_mich_
 const update_arg_to_mich = (upm: Array<[
     string,
     [
-        string,
+        ex.Signature,
         oracleData_value
     ]
 ]>): ex.Micheline => {
     return ex.list_to_mich(upm, x => {
         const x_key = x[0];
         const x_value = x[1];
-        return ex.elt_to_mich(ex.string_to_mich(x_key), ex.pair_to_mich([ex.string_to_mich(x_value[0]), oracleData_value_to_mich(x_value[1])]));
+        return ex.elt_to_mich(ex.string_to_mich(x_key), ex.pair_to_mich([x_value[0].to_mich(), oracleData_value_to_mich(x_value[1])]));
     });
 }
 const push_arg_to_mich = (normalizer: ex.Entrypoint): ex.Micheline => {
     return normalizer.to_mich();
 }
-const revoke_arg_to_mich = (sig: string): ex.Micheline => {
-    return ex.string_to_mich(sig);
+const revoke_arg_to_mich = (sig: ex.Signature): ex.Micheline => {
+    return sig.to_mich();
 }
 export class Oracle {
     address: string | undefined;
-    get_address(): string | undefined {
-        return this.address;
+    get_address(): ex.Address {
+        if (undefined != this.address) {
+            return new ex.Address(this.address);
+        }
+        throw new Error("Contract not initialised");
     }
-    async deploy(publickey: string, params: Partial<ex.Parameters>) {
+    async get_balance(): Promise<ex.Tez> {
+        if (null != this.address) {
+            return await ex.get_balance(new ex.Address(this.address));
+        }
+        throw new Error("Contract not initialised");
+    }
+    async deploy(publickey: ex.Key, params: Partial<ex.Parameters>) {
         const address = await ex.deploy("./contracts/oracle.arl", {
-            publickey: publickey
+            publickey: publickey.toString()
         }, params);
         this.address = address;
     }
     async update(upm: Array<[
         string,
         [
-            string,
+            ex.Signature,
             oracleData_value
         ]
     ]>, params: Partial<ex.Parameters>): Promise<any> {
@@ -123,25 +137,30 @@ export class Oracle {
             await ex.call(this.address, "push", push_arg_to_mich(normalizer), params);
         }
     }
-    async revoke(sig: string, params: Partial<ex.Parameters>): Promise<any> {
+    async revoke(sig: ex.Signature, params: Partial<ex.Parameters>): Promise<any> {
         if (this.address != undefined) {
             await ex.call(this.address, "revoke", revoke_arg_to_mich(sig), params);
         }
+    }
+    async get_publickey(): Promise<ex.Key> {
+        if (this.address != undefined) {
+            const storage = await ex.get_storage(this.address);
+            return new ex.Key(storage.publickey);
+        }
+        throw new Error("Contract not initialised");
     }
     async get_oracleData_value(key: oracleData_key): Promise<oracleData_value | undefined> {
         if (this.address != undefined) {
             const storage = await ex.get_storage(this.address);
             const data = await ex.get_big_map_value(BigInt(storage.oracleData), oracleData_key_to_mich(key), oracleData_key_mich_type);
             if (data != undefined) {
-                return mich_to_oracleData_value(data);
+                return mich_to_oracleData_value(data, true);
             }
             else {
                 return undefined;
             }
         }
-        else {
-            return undefined;
-        }
+        throw new Error("Contract not initialised");
     }
     async get_state(): Promise<states> {
         if (this.address != undefined) {
@@ -155,9 +174,10 @@ export class Oracle {
         return states.Running;
     }
     errors = {
-        INVALID_SIG: ex.string_to_mich("bad sig"),
-        REVOKED: ex.string_to_mich("bad sig"),
-        BAD_REQUEST: ex.string_to_mich("bad sig")
+        INVALID_STATE: ex.string_to_mich("\"INVALID_STATE\""),
+        r0: ex.string_to_mich("\"bad sig\""),
+        BAD_SIG: ex.string_to_mich("\"bad sig\""),
+        REVOKED: ex.string_to_mich("\"revoked\"")
     };
 }
 export const oracle = new Oracle();

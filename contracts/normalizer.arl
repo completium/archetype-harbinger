@@ -72,13 +72,11 @@ entry update(upm : big_map<asset_key<assetMap>, update_param>) {
 }
 
 getter get(requestedAsset : asset_key<assetMap>) : asset_key<assetMap> * date * nat {
-  do_require(assetMap.contains(requestedAsset), BAD_REQUEST);
-  const assetData  ?= assetMap[requestedAsset];
+  const assetData ?= assetMap[requestedAsset] : BAD_REQUEST;
   return ((requestedAsset, assetData.lastUpdateTime, assetData.computedPrice))
 }
 
 view getPrice(requestedAsset : asset_key<assetMap>) : date * nat {
-  do_require(assetMap.contains(requestedAsset), BAD_REQUEST);
-  const assetData  ?= assetMap[requestedAsset];
+  const assetData ?= assetMap[requestedAsset] : BAD_REQUEST;
   return ((assetData.lastUpdateTime, assetData.computedPrice))
 }
