@@ -1,15 +1,13 @@
 /* Imports ----------------------------------------------------------------- */
 
-import { Option, Account, expect_to_fail, get_account, Nat, option_to_mich_type, pack, pair_array_to_mich_type, pair_to_mich, pair_to_mich_type, prim_to_mich_type, set_mockup, set_mockup_now, set_quiet, sign, string_to_mich } from '@completium/experiment-ts'
+import { Account, expect_to_fail, get_account, Nat, Option, option_to_mich_type, pack, pair_array_to_mich_type, pair_to_mich, pair_to_mich_type, prim_to_mich_type, set_mockup, set_mockup_now, set_quiet, sign, string_to_mich } from '@completium/experiment-ts'
 
 const assert = require('assert')
 
 import {
   oracle,
   oracleData_value,
-  oracleData_value_cmp,
   states,
-  oracleData_value_to_mich,
   oracleData_value_mich_type
 } from './binding/oracle'
 
@@ -33,7 +31,7 @@ set_mockup_now(new Date(Date.now()))
 /* Utils ------------------------------------------------------------------- */
 
 export const sign_oracle_data = async (key : string, data : oracleData_value, signer : Account) => {
-  const value = pair_to_mich([string_to_mich(key), oracleData_value_to_mich(data)])
+  const value = pair_to_mich([string_to_mich(key), data.to_mich()])
   const type  = pair_array_to_mich_type([prim_to_mich_type("string"), oracleData_value_mich_type])
   const packed = pack(value, type)
   return await sign(packed, signer)
@@ -51,51 +49,51 @@ export const sign_oracle_revoke = async (signer : Account) => {
 export const asset1          = "XTZ-USD"
 export const asset2          = "BTC-USD"
 const asset_untracked = "XTZ-BTC"
-const input1 : oracleData_value = {
-  start  : new Date('1970-01-01T00:00:01Z'),
-  end    : new Date('1970-01-01T00:00:02Z'),
-  open   : new Nat(3),
-  high   : new Nat(4),
-  low    : new Nat(5),
-  close  : new Nat(6),
-  volume : new Nat(7)
-}
-const input2 : oracleData_value  = {
-  start  : new Date('1970-01-01T00:00:08Z'),
-  end    : new Date('1970-01-01T00:00:09Z'),
-  open   : new Nat(10),
-  high   : new Nat(11),
-  low    : new Nat(12),
-  close  : new Nat(13),
-  volume : new Nat(14)
-}
-const input_past : oracleData_value  = {
-  start  : new Date('1970-01-01T00:00:08Z'),
-  end    : new Date('1970-01-01T00:00:09Z'),
-  open   : new Nat(15),
-  high   : new Nat(16),
-  low    : new Nat(17),
-  close  : new Nat(18),
-  volume : new Nat(19)
-}
-const input3 : oracleData_value = {
-  start  : new Date('1970-01-01T00:00:15Z'),
-  end    : new Date('1970-01-01T00:00:16Z'),
-  open   : new Nat(17),
-  high   : new Nat(18),
-  low    : new Nat(19),
-  close  : new Nat(20),
-  volume : new Nat(21)
-}
-const input4 : oracleData_value = {
-  start  : new Date('1970-01-01T00:00:22Z'),
-  end    : new Date('1970-01-01T00:00:23Z'),
-  open   : new Nat(24),
-  high   : new Nat(25),
-  low    : new Nat(26),
-  close  : new Nat(27),
-  volume : new Nat(28)
-}
+const input1 = new oracleData_value(
+  new Date('1970-01-01T00:00:01Z'),
+  new Date('1970-01-01T00:00:02Z'),
+  new Nat(3),
+  new Nat(4),
+  new Nat(5),
+  new Nat(6),
+  new Nat(7)
+)
+const input2 = new oracleData_value(
+  new Date('1970-01-01T00:00:08Z'),
+  new Date('1970-01-01T00:00:09Z'),
+  new Nat(10),
+  new Nat(11),
+  new Nat(12),
+  new Nat(13),
+  new Nat(14)
+)
+const input_past = new oracleData_value(
+  new Date('1970-01-01T00:00:08Z'),
+  new Date('1970-01-01T00:00:09Z'),
+  new Nat(15),
+  new Nat(16),
+  new Nat(17),
+  new Nat(18),
+  new Nat(19)
+)
+const input3 = new oracleData_value(
+  new Date('1970-01-01T00:00:15Z'),
+  new Date('1970-01-01T00:00:16Z'),
+  new Nat(17),
+  new Nat(18),
+  new Nat(19),
+  new Nat(20),
+  new Nat(21)
+)
+const input4 = new oracleData_value(
+  new Date('1970-01-01T00:00:22Z'),
+  new Date('1970-01-01T00:00:23Z'),
+  new Nat(24),
+  new Nat(25),
+  new Nat(26),
+  new Nat(27),
+  new Nat(28)
+)
 
 /* Scenario ---------------------------------------------------------------- */
 
@@ -112,7 +110,7 @@ describe('[Oracle] Update', async () => {
       as: alice
     })
     const output = await oracle.get_oracleData_value(asset1);
-    (output != undefined) ? assert(oracleData_value_cmp(output, input1)) : assert(false)
+    (output != undefined) ? assert(output.equals(input1)) : assert(false)
   })
   it('Second Update Overwrites First Update', async () => {
     const sig = await sign_oracle_data(asset1, input2, alice)
@@ -120,7 +118,7 @@ describe('[Oracle] Update', async () => {
       as: alice
     })
     const output = await oracle.get_oracleData_value(asset1);
-    (output != undefined) ? assert(oracleData_value_cmp(output, input2)) : assert(false)
+    (output != undefined) ? assert(output.equals(input2)) : assert(false)
   })
   it('Correctly Processes Updates With Data From The Past', async () => {
     const sig = await sign_oracle_data(asset1, input_past, alice)
@@ -128,7 +126,7 @@ describe('[Oracle] Update', async () => {
       as: alice
     })
     const output = await oracle.get_oracleData_value(asset1);
-    (output != undefined) ? assert(oracleData_value_cmp(output, input2)) : assert(false)
+    (output != undefined) ? assert(output.equals(input2)) : assert(false)
   })
   it('Untracked Asset does not update oracle', async () => {
     const sig = await sign_oracle_data(asset_untracked, input1, alice)
@@ -153,17 +151,17 @@ describe('[Oracle] Update', async () => {
       as: alice
     })
     const output1 = await oracle.get_oracleData_value(asset1);
-    (output1 != undefined) ? assert(oracleData_value_cmp(output1, input3)) : assert(false)
+    (output1 != undefined) ? assert(output1.equals(input3)) : assert(false)
     const output2 = await oracle.get_oracleData_value(asset2);
-    (output2 != undefined) ? assert(oracleData_value_cmp(output2, input1)) : assert(false)
+    (output2 != undefined) ? assert(output2.equals(input1)) : assert(false)
     const sig3 = await sign_oracle_data(asset1, input4, alice)
     await oracle.update([ [ asset2, [ sig2, input1 ] ],[ asset1, [ sig3, input4 ] ] ], {
       as: alice
     })
     const output3 = await oracle.get_oracleData_value(asset1);
-    (output3 != undefined) ? assert(oracleData_value_cmp(output3, input4)) : assert(false)
+    (output3 != undefined) ? assert(output3.equals(input4)) : assert(false)
     const output4 = await oracle.get_oracleData_value(asset2);
-    (output4 != undefined) ? assert(oracleData_value_cmp(output4, input1)) : assert(false)
+    (output4 != undefined) ? assert(output4.equals(input1)) : assert(false)
   })
 })
 

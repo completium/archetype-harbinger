@@ -41,78 +41,78 @@ const numDataPoints = 3
 
 let update_entry : Entrypoint
 
-const input0 : oracleData_value = {
-  start  : new Date('2020-07-18T22:35:01Z'),
-  end    : new Date('2020-07-18T22:35:31Z'),
-  open   : new Nat(3059701),
-  high   : new Nat(1),
-  low    : new Nat(2),
-  close  : new Nat(3),
-  volume : new Nat(4)
-}
-const input1 : oracleData_value = {
-  start  : new Date('1970-01-01T00:00:01Z'),
-  end    : new Date('1970-01-01T00:00:02Z'),
-  open   : new Nat(1),
-  high   : new Nat(2),
-  low    : new Nat(3),
-  close  : new Nat(4),
-  volume : new Nat(5)
-}
-const input1_same_date : oracleData_value = {
-  start  : new Date('1970-01-01T00:00:01Z'),
-  end    : new Date('1970-01-01T00:00:02Z'),
-  open   : new Nat(6),
-  high   : new Nat(7),
-  low    : new Nat(8),
-  close  : new Nat(9),
-  volume : new Nat(10)
-}
-const input2 : oracleData_value = {
-  start  : new Date('1970-01-01T00:00:03Z'),
-  end    : new Date('1970-01-01T00:00:04Z'),
-  open   : new Nat(6),
-  high   : new Nat(7),
-  low    : new Nat(8),
-  close  : new Nat(9),
-  volume : new Nat(10)
-}
-const input3 : oracleData_value = {
-  start  : new Date('1970-01-01T00:00:05Z'),
-  end    : new Date('1970-01-01T00:00:06Z'),
-  open   : new Nat(11),
-  high   : new Nat(12),
-  low    : new Nat(13),
-  close  : new Nat(14),
-  volume : new Nat(15)
-}
-const input4 : oracleData_value = {
-  start  : new Date('1970-01-01T00:00:07Z'),
-  end    : new Date('1970-01-01T00:00:08Z'),
-  open   : new Nat(16),
-  high   : new Nat(17),
-  low    : new Nat(18),
-  close  : new Nat(19),
-  volume : new Nat(20)
-}
-const input5 : oracleData_value = {
-  start  : new Date('1970-01-01T00:00:09Z'),
-  end    : new Date('1970-01-01T00:00:10Z'),
-  open   : new Nat(21),
-  high   : new Nat(22),
-  low    : new Nat(23),
-  close  : new Nat(24),
-  volume : new Nat(25)
-}
-const input6 : oracleData_value = {
-  start  : new Date('1970-01-01T00:00:11Z'),
-  end    : new Date('1970-01-01T00:00:12Z'),
-  open   : new Nat(26),
-  high   : new Nat(27),
-  low    : new Nat(28),
-  close  : new Nat(29),
-  volume : new Nat(30)
-}
+const input0 = new oracleData_value(
+  new Date('2020-07-18T22:35:01Z'),
+  new Date('2020-07-18T22:35:31Z'),
+  new Nat(3059701),
+  new Nat(1),
+  new Nat(2),
+  new Nat(3),
+  new Nat(4)
+)
+const input1 = new oracleData_value(
+  new Date('1970-01-01T00:00:01Z'),
+  new Date('1970-01-01T00:00:02Z'),
+  new Nat(1),
+  new Nat(2),
+  new Nat(3),
+  new Nat(4),
+  new Nat(5)
+)
+const input1_same_date = new oracleData_value(
+  new Date('1970-01-01T00:00:01Z'),
+  new Date('1970-01-01T00:00:02Z'),
+  new Nat(6),
+  new Nat(7),
+  new Nat(8),
+  new Nat(9),
+  new Nat(10)
+)
+const input2 = new oracleData_value(
+  new Date('1970-01-01T00:00:03Z'),
+  new Date('1970-01-01T00:00:04Z'),
+  new Nat(6),
+  new Nat(7),
+  new Nat(8),
+  new Nat(9),
+  new Nat(10)
+)
+const input3 = new oracleData_value(
+  new Date('1970-01-01T00:00:05Z'),
+  new Date('1970-01-01T00:00:06Z'),
+  new Nat(11),
+  new Nat(12),
+  new Nat(13),
+  new Nat(14),
+  new Nat(15)
+)
+const input4 = new oracleData_value(
+  new Date('1970-01-01T00:00:07Z'),
+  new Date('1970-01-01T00:00:08Z'),
+  new Nat(16),
+  new Nat(17),
+  new Nat(18),
+  new Nat(19),
+  new Nat(20)
+)
+const input5 = new oracleData_value(
+  new Date('1970-01-01T00:00:09Z'),
+  new Date('1970-01-01T00:00:10Z'),
+  new Nat(21),
+  new Nat(22),
+  new Nat(23),
+  new Nat(24),
+  new Nat(25)
+)
+const input6 = new oracleData_value(
+  new Date('1970-01-01T00:00:11Z'),
+  new Date('1970-01-01T00:00:12Z'),
+  new Nat(26),
+  new Nat(27),
+  new Nat(28),
+  new Nat(29),
+  new Nat(30)
+)
 const VWAP1 = computeVWAP(input1.high, input1.low, input1.close, input1.volume)
 const VWAP2 = computeVWAP(input2.high, input2.low, input2.close, input2.volume)
 const VWAP3 = computeVWAP(input3.high, input3.low, input3.close, input3.volume)

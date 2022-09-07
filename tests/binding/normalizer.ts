@@ -1,32 +1,36 @@
 import * as ex from "@completium/experiment-ts";
-export interface queue {
-    first: ex.Int;
-    last: ex.Int;
-    sum: ex.Nat;
-    saved: Array<[
+
+export class queue implements ex.ArchetypeType {
+    constructor(public first: ex.Int, public last: ex.Int, public sum: ex.Nat, public saved: Array<[
         ex.Int,
         ex.Nat
-    ]>;
+    ]>) { }
+    toString(): string {
+        return JSON.stringify(this, null, 2);
+    }
+    to_mich(): ex.Micheline {
+        return ex.pair_to_mich([this.first.to_mich(), ex.pair_to_mich([this.last.to_mich(), ex.pair_to_mich([this.sum.to_mich(), ex.list_to_mich(this.saved, x => {
+                        const x_key = x[0];
+                        const x_value = x[1];
+                        return ex.elt_to_mich(x_key.to_mich(), x_value.to_mich());
+                    })])])]);
+    }
+    equals(v: queue): boolean {
+        return (this.first.equals(v.first) && this.first.equals(v.first) && this.last.equals(v.last) && this.sum.equals(v.sum) && this.saved == v.saved);
+    }
 }
-export interface update_param {
-    start: Date;
-    end: Date;
-    open: ex.Nat;
-    high: ex.Nat;
-    low: ex.Nat;
-    close: ex.Nat;
-    volume: ex.Nat;
+export class update_param implements ex.ArchetypeType {
+    constructor(public start: Date, public end: Date, public open: ex.Nat, public high: ex.Nat, public low: ex.Nat, public close: ex.Nat, public volume: ex.Nat) { }
+    toString(): string {
+        return JSON.stringify(this, null, 2);
+    }
+    to_mich(): ex.Micheline {
+        return ex.pair_to_mich([ex.date_to_mich(this.start), ex.pair_to_mich([ex.date_to_mich(this.end), ex.pair_to_mich([this.open.to_mich(), ex.pair_to_mich([this.high.to_mich(), ex.pair_to_mich([this.low.to_mich(), ex.pair_to_mich([this.close.to_mich(), this.volume.to_mich()])])])])])]);
+    }
+    equals(v: update_param): boolean {
+        return ((this.start.getTime() - this.start.getMilliseconds()) == (v.start.getTime() - v.start.getMilliseconds()) && (this.start.getTime() - this.start.getMilliseconds()) == (v.start.getTime() - v.start.getMilliseconds()) && (this.end.getTime() - this.end.getMilliseconds()) == (v.end.getTime() - v.end.getMilliseconds()) && this.open.equals(v.open) && this.high.equals(v.high) && this.low.equals(v.low) && this.close.equals(v.close) && this.volume.equals(v.volume));
+    }
 }
-export const queue_to_mich = (x: queue): ex.Micheline => {
-    return ex.pair_to_mich([x.first.to_mich(), ex.pair_to_mich([x.last.to_mich(), ex.pair_to_mich([x.sum.to_mich(), ex.list_to_mich(x.saved, x => {
-                    const x_key = x[0];
-                    const x_value = x[1];
-                    return ex.elt_to_mich(x_key.to_mich(), x_value.to_mich());
-                })])])]);
-};
-export const update_param_to_mich = (x: update_param): ex.Micheline => {
-    return ex.pair_to_mich([ex.date_to_mich(x.start), ex.pair_to_mich([ex.date_to_mich(x.end), ex.pair_to_mich([x.open.to_mich(), ex.pair_to_mich([x.high.to_mich(), ex.pair_to_mich([x.low.to_mich(), ex.pair_to_mich([x.close.to_mich(), x.volume.to_mich()])])])])])]);
-};
 export const queue_mich_type: ex.MichelineType = ex.pair_array_to_mich_type([
     ex.prim_annot_to_mich_type("int", ["%first"]),
     ex.pair_array_to_mich_type([
@@ -57,45 +61,39 @@ export const update_param_mich_type: ex.MichelineType = ex.pair_array_to_mich_ty
     ])
 ]);
 export const mich_to_queue = (v: ex.Micheline, collapsed: boolean = false): queue => {
-    let fields = [];
+    let fields: ex.Micheline[] = [];
     if (collapsed) {
         fields = ex.mich_to_pairs(v);
     }
     else {
         fields = ex.annotated_mich_to_array(v, queue_mich_type);
     }
-    return { first: ex.mich_to_int(fields[0]), last: ex.mich_to_int(fields[1]), sum: ex.mich_to_nat(fields[2]), saved: ex.mich_to_map(fields[3], (x, y) => [ex.mich_to_int(x), ex.mich_to_nat(y)]) };
+    return new queue(ex.mich_to_int(fields[0]), ex.mich_to_int(fields[1]), ex.mich_to_nat(fields[2]), ex.mich_to_map(fields[3], (x, y) => [ex.mich_to_int(x), ex.mich_to_nat(y)]));
 };
 export const mich_to_update_param = (v: ex.Micheline, collapsed: boolean = false): update_param => {
-    let fields = [];
+    let fields: ex.Micheline[] = [];
     if (collapsed) {
         fields = ex.mich_to_pairs(v);
     }
     else {
         fields = ex.annotated_mich_to_array(v, update_param_mich_type);
     }
-    return { start: ex.mich_to_date(fields[0]), end: ex.mich_to_date(fields[1]), open: ex.mich_to_nat(fields[2]), high: ex.mich_to_nat(fields[3]), low: ex.mich_to_nat(fields[4]), close: ex.mich_to_nat(fields[5]), volume: ex.mich_to_nat(fields[6]) };
-};
-export const queue_cmp = (a: queue, b: queue) => {
-    return (a.first.equals(b.first) && a.last.equals(b.last) && a.sum.equals(b.sum) && a.saved == b.saved);
-};
-export const update_param_cmp = (a: update_param, b: update_param) => {
-    return ((a.start.getTime() - a.start.getMilliseconds()) == (b.start.getTime() - b.start.getMilliseconds()) && (a.end.getTime() - a.end.getMilliseconds()) == (b.end.getTime() - b.end.getMilliseconds()) && a.open.equals(b.open) && a.high.equals(b.high) && a.low.equals(b.low) && a.close.equals(b.close) && a.volume.equals(b.volume));
+    return new update_param(ex.mich_to_date(fields[0]), ex.mich_to_date(fields[1]), ex.mich_to_nat(fields[2]), ex.mich_to_nat(fields[3]), ex.mich_to_nat(fields[4]), ex.mich_to_nat(fields[5]), ex.mich_to_nat(fields[6]));
 };
 export type assetMap_key = string;
-export const assetMap_key_to_mich = (x: assetMap_key): ex.Micheline => {
-    return ex.string_to_mich(x);
-};
 export const assetMap_key_mich_type: ex.MichelineType = ex.prim_annot_to_mich_type("string", []);
-export interface assetMap_value {
-    computedPrice: ex.Nat;
-    lastUpdateTime: Date;
-    prices: queue;
-    volumes: queue;
+export class assetMap_value implements ex.ArchetypeType {
+    constructor(public computedPrice: ex.Nat, public lastUpdateTime: Date, public prices: queue, public volumes: queue) { }
+    toString(): string {
+        return JSON.stringify(this, null, 2);
+    }
+    to_mich(): ex.Micheline {
+        return ex.pair_to_mich([this.computedPrice.to_mich(), ex.pair_to_mich([ex.date_to_mich(this.lastUpdateTime), ex.pair_to_mich([this.prices.to_mich(), this.volumes.to_mich()])])]);
+    }
+    equals(v: assetMap_value): boolean {
+        return (this.computedPrice.equals(v.computedPrice) && this.computedPrice.equals(v.computedPrice) && (this.lastUpdateTime.getTime() - this.lastUpdateTime.getMilliseconds()) == (v.lastUpdateTime.getTime() - v.lastUpdateTime.getMilliseconds()) && this.prices == v.prices && this.volumes == v.volumes);
+    }
 }
-export const assetMap_value_to_mich = (x: assetMap_value): ex.Micheline => {
-    return ex.pair_to_mich([x.computedPrice.to_mich(), ex.pair_to_mich([ex.date_to_mich(x.lastUpdateTime), ex.pair_to_mich([queue_to_mich(x.prices), queue_to_mich(x.volumes)])])]);
-};
 export const assetMap_value_mich_type: ex.MichelineType = ex.pair_array_to_mich_type([
     ex.prim_annot_to_mich_type("nat", ["%computedPrice"]),
     ex.pair_array_to_mich_type([
@@ -125,29 +123,19 @@ export const assetMap_value_mich_type: ex.MichelineType = ex.pair_array_to_mich_
     ])
 ]);
 export const mich_to_assetMap_value = (v: ex.Micheline, collapsed: boolean = false): assetMap_value => {
-    let fields = [];
+    let fields: ex.Micheline[] = [];
     if (collapsed) {
         fields = ex.mich_to_pairs(v);
     }
     else {
         fields = ex.annotated_mich_to_array(v, assetMap_value_mich_type);
     }
-    return { computedPrice: ex.mich_to_nat(fields[0]), lastUpdateTime: ex.mich_to_date(fields[1]), prices: mich_to_queue(fields[2], collapsed), volumes: mich_to_queue({ prim: "Pair", args: fields.slice(3) }, collapsed) };
-};
-export const assetMap_value_cmp = (a: assetMap_value, b: assetMap_value) => {
-    return (a.computedPrice.equals(b.computedPrice) && (a.lastUpdateTime.getTime() - a.lastUpdateTime.getMilliseconds()) == (b.lastUpdateTime.getTime() - b.lastUpdateTime.getMilliseconds()) && a.prices == b.prices && a.volumes == b.volumes);
+    return new assetMap_value(ex.mich_to_nat(fields[0]), ex.mich_to_date(fields[1]), mich_to_queue(fields[2], collapsed), mich_to_queue({ prim: "Pair", args: fields.slice(3) }, collapsed));
 };
 export type assetMap_container = Array<[
     assetMap_key,
     assetMap_value
 ]>;
-export const assetMap_container_to_mich = (x: assetMap_container): ex.Micheline => {
-    return ex.list_to_mich(x, x => {
-        const x_key = x[0];
-        const x_value = x[1];
-        return ex.elt_to_mich(ex.string_to_mich(x_key), ex.pair_to_mich([x_value.computedPrice.to_mich(), ex.pair_to_mich([ex.date_to_mich(x_value.lastUpdateTime), ex.pair_to_mich([queue_to_mich(x_value.prices), queue_to_mich(x_value.volumes)])])]));
-    });
-};
 export const assetMap_container_mich_type: ex.MichelineType = ex.pair_to_mich_type("big_map", ex.prim_annot_to_mich_type("string", []), ex.pair_array_to_mich_type([
     ex.prim_annot_to_mich_type("nat", ["%computedPrice"]),
     ex.pair_array_to_mich_type([
@@ -183,7 +171,7 @@ const update_arg_to_mich = (upm: Array<[
     return ex.list_to_mich(upm, x => {
         const x_key = x[0];
         const x_value = x[1];
-        return ex.elt_to_mich(ex.string_to_mich(x_key), update_param_to_mich(x_value));
+        return ex.elt_to_mich(ex.string_to_mich(x_key), x_value.to_mich());
     });
 }
 export class Normalizer {
@@ -244,7 +232,7 @@ export class Normalizer {
     async get_assetMap_value(key: assetMap_key): Promise<assetMap_value | undefined> {
         if (this.address != undefined) {
             const storage = await ex.get_storage(this.address);
-            const data = await ex.get_big_map_value(BigInt(storage.assetMap), assetMap_key_to_mich(key), assetMap_key_mich_type);
+            const data = await ex.get_big_map_value(BigInt(storage.assetMap), ex.string_to_mich(key), assetMap_key_mich_type);
             if (data != undefined) {
                 return mich_to_assetMap_value(data, true);
             }

@@ -1,25 +1,23 @@
 import * as ex from "@completium/experiment-ts";
+
 export enum states {
     Running = 1,
     Revoked
 }
 export type oracleData_key = string;
-export const oracleData_key_to_mich = (x: oracleData_key): ex.Micheline => {
-    return ex.string_to_mich(x);
-};
 export const oracleData_key_mich_type: ex.MichelineType = ex.prim_annot_to_mich_type("string", []);
-export interface oracleData_value {
-    start: Date;
-    end: Date;
-    open: ex.Nat;
-    high: ex.Nat;
-    low: ex.Nat;
-    close: ex.Nat;
-    volume: ex.Nat;
+export class oracleData_value implements ex.ArchetypeType {
+    constructor(public start: Date, public end: Date, public open: ex.Nat, public high: ex.Nat, public low: ex.Nat, public close: ex.Nat, public volume: ex.Nat) { }
+    toString(): string {
+        return JSON.stringify(this, null, 2);
+    }
+    to_mich(): ex.Micheline {
+        return ex.pair_to_mich([ex.date_to_mich(this.start), ex.pair_to_mich([ex.date_to_mich(this.end), ex.pair_to_mich([this.open.to_mich(), ex.pair_to_mich([this.high.to_mich(), ex.pair_to_mich([this.low.to_mich(), ex.pair_to_mich([this.close.to_mich(), this.volume.to_mich()])])])])])]);
+    }
+    equals(v: oracleData_value): boolean {
+        return ((this.start.getTime() - this.start.getMilliseconds()) == (v.start.getTime() - v.start.getMilliseconds()) && (this.start.getTime() - this.start.getMilliseconds()) == (v.start.getTime() - v.start.getMilliseconds()) && (this.end.getTime() - this.end.getMilliseconds()) == (v.end.getTime() - v.end.getMilliseconds()) && this.open.equals(v.open) && this.high.equals(v.high) && this.low.equals(v.low) && this.close.equals(v.close) && this.volume.equals(v.volume));
+    }
 }
-export const oracleData_value_to_mich = (x: oracleData_value): ex.Micheline => {
-    return ex.pair_to_mich([ex.date_to_mich(x.start), ex.pair_to_mich([ex.date_to_mich(x.end), ex.pair_to_mich([x.open.to_mich(), ex.pair_to_mich([x.high.to_mich(), ex.pair_to_mich([x.low.to_mich(), ex.pair_to_mich([x.close.to_mich(), x.volume.to_mich()])])])])])]);
-};
 export const oracleData_value_mich_type: ex.MichelineType = ex.pair_array_to_mich_type([
     ex.prim_annot_to_mich_type("timestamp", ["%start"]),
     ex.pair_array_to_mich_type([
@@ -40,29 +38,19 @@ export const oracleData_value_mich_type: ex.MichelineType = ex.pair_array_to_mic
     ])
 ]);
 export const mich_to_oracleData_value = (v: ex.Micheline, collapsed: boolean = false): oracleData_value => {
-    let fields = [];
+    let fields: ex.Micheline[] = [];
     if (collapsed) {
         fields = ex.mich_to_pairs(v);
     }
     else {
         fields = ex.annotated_mich_to_array(v, oracleData_value_mich_type);
     }
-    return { start: ex.mich_to_date(fields[0]), end: ex.mich_to_date(fields[1]), open: ex.mich_to_nat(fields[2]), high: ex.mich_to_nat(fields[3]), low: ex.mich_to_nat(fields[4]), close: ex.mich_to_nat(fields[5]), volume: ex.mich_to_nat(fields[6]) };
-};
-export const oracleData_value_cmp = (a: oracleData_value, b: oracleData_value) => {
-    return ((a.start.getTime() - a.start.getMilliseconds()) == (b.start.getTime() - b.start.getMilliseconds()) && (a.end.getTime() - a.end.getMilliseconds()) == (b.end.getTime() - b.end.getMilliseconds()) && a.open.equals(b.open) && a.high.equals(b.high) && a.low.equals(b.low) && a.close.equals(b.close) && a.volume.equals(b.volume));
+    return new oracleData_value(ex.mich_to_date(fields[0]), ex.mich_to_date(fields[1]), ex.mich_to_nat(fields[2]), ex.mich_to_nat(fields[3]), ex.mich_to_nat(fields[4]), ex.mich_to_nat(fields[5]), ex.mich_to_nat(fields[6]));
 };
 export type oracleData_container = Array<[
     oracleData_key,
     oracleData_value
 ]>;
-export const oracleData_container_to_mich = (x: oracleData_container): ex.Micheline => {
-    return ex.list_to_mich(x, x => {
-        const x_key = x[0];
-        const x_value = x[1];
-        return ex.elt_to_mich(ex.string_to_mich(x_key), ex.pair_to_mich([ex.date_to_mich(x_value.start), ex.pair_to_mich([ex.date_to_mich(x_value.end), ex.pair_to_mich([x_value.open.to_mich(), ex.pair_to_mich([x_value.high.to_mich(), ex.pair_to_mich([x_value.low.to_mich(), ex.pair_to_mich([x_value.close.to_mich(), x_value.volume.to_mich()])])])])])]));
-    });
-};
 export const oracleData_container_mich_type: ex.MichelineType = ex.pair_to_mich_type("big_map", ex.prim_annot_to_mich_type("string", []), ex.pair_array_to_mich_type([
     ex.prim_annot_to_mich_type("timestamp", ["%start"]),
     ex.pair_array_to_mich_type([
@@ -92,7 +80,7 @@ const update_arg_to_mich = (upm: Array<[
     return ex.list_to_mich(upm, x => {
         const x_key = x[0];
         const x_value = x[1];
-        return ex.elt_to_mich(ex.string_to_mich(x_key), ex.pair_to_mich([x_value[0].to_mich(), oracleData_value_to_mich(x_value[1])]));
+        return ex.elt_to_mich(ex.string_to_mich(x_key), ex.pair_to_mich([x_value[0].to_mich(), x_value[1].to_mich()]));
     });
 }
 const push_arg_to_mich = (normalizer: ex.Entrypoint): ex.Micheline => {
@@ -152,7 +140,7 @@ export class Oracle {
     async get_oracleData_value(key: oracleData_key): Promise<oracleData_value | undefined> {
         if (this.address != undefined) {
             const storage = await ex.get_storage(this.address);
-            const data = await ex.get_big_map_value(BigInt(storage.oracleData), oracleData_key_to_mich(key), oracleData_key_mich_type);
+            const data = await ex.get_big_map_value(BigInt(storage.oracleData), ex.string_to_mich(key), oracleData_key_mich_type);
             if (data != undefined) {
                 return mich_to_oracleData_value(data, true);
             }
@@ -177,8 +165,7 @@ export class Oracle {
         INVALID_STATE: ex.string_to_mich("\"INVALID_STATE\""),
         r0: ex.string_to_mich("\"bad sig\""),
         BAD_SIG: ex.string_to_mich("\"bad sig\""),
-        REVOKED: ex.string_to_mich("\"revoked\""),
-        BAD_REQUEST: ex.string_to_mich("\"bad request\"")
+        REVOKED: ex.string_to_mich("\"revoked\"")
     };
 }
 export const oracle = new Oracle();

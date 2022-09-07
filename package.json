@@ -27,7 +27,7 @@
   "homepage": "https://github.com/completium/archetype-harbinger#readme",
   "dependencies": {
     "@completium/completium-cli": "^0.4.3",
-    "@completium/experiment-ts": "^0.0.44",
+    "@completium/experiment-ts": "^0.0.55",
     "mocha": "^10.0.0"
   },
   "devDependencies": {
