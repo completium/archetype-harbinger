@@ -1,240 +1,239 @@
 import * as ex from "@completium/experiment-ts";
-
-export class queue implements ex.ArchetypeType {
-    constructor(public first: ex.Int, public last: ex.Int, public sum: ex.Nat, public saved: Array<[
-        ex.Int,
-        ex.Nat
+import * as att from "@completium/archetype-ts-types";
+export class queue implements att.ArchetypeType {
+    constructor(public first: att.Int, public last: att.Int, public sum: att.Nat, public saved: Array<[
+        att.Int,
+        att.Nat
     ]>) { }
     toString(): string {
         return JSON.stringify(this, null, 2);
     }
-    to_mich(): ex.Micheline {
-        return ex.pair_to_mich([this.first.to_mich(), ex.pair_to_mich([this.last.to_mich(), ex.pair_to_mich([this.sum.to_mich(), ex.list_to_mich(this.saved, x => {
-                        const x_key = x[0];
-                        const x_value = x[1];
-                        return ex.elt_to_mich(x_key.to_mich(), x_value.to_mich());
-                    })])])]);
+    to_mich(): att.Micheline {
+        return att.pair_to_mich([this.first.to_mich(), this.last.to_mich(), this.sum.to_mich(), att.list_to_mich(this.saved, x => {
+                const x_key = x[0];
+                const x_value = x[1];
+                return att.elt_to_mich(x_key.to_mich(), x_value.to_mich());
+            })]);
     }
     equals(v: queue): boolean {
-        return (this.first.equals(v.first) && this.first.equals(v.first) && this.last.equals(v.last) && this.sum.equals(v.sum) && this.saved == v.saved);
+        return att.micheline_equals(this.to_mich(), v.to_mich());
+    }
+    static from_mich(input: att.Micheline): queue {
+        return new queue(att.Int.from_mich((input as att.Mpair).args[0]), att.Int.from_mich((input as att.Mpair).args[1]), att.Nat.from_mich((input as att.Mpair).args[2]), att.mich_to_map((input as att.Mpair).args[3], (x, y) => [att.Int.from_mich(x), att.Nat.from_mich(y)]));
     }
 }
-export class update_param implements ex.ArchetypeType {
-    constructor(public start: Date, public end: Date, public open: ex.Nat, public high: ex.Nat, public low: ex.Nat, public close: ex.Nat, public volume: ex.Nat) { }
+export class update_param implements att.ArchetypeType {
+    constructor(public start: Date, public end: Date, public open: att.Nat, public high: att.Nat, public low: att.Nat, public close: att.Nat, public volume: att.Nat) { }
     toString(): string {
         return JSON.stringify(this, null, 2);
     }
-    to_mich(): ex.Micheline {
-        return ex.pair_to_mich([ex.date_to_mich(this.start), ex.pair_to_mich([ex.date_to_mich(this.end), ex.pair_to_mich([this.open.to_mich(), ex.pair_to_mich([this.high.to_mich(), ex.pair_to_mich([this.low.to_mich(), ex.pair_to_mich([this.close.to_mich(), this.volume.to_mich()])])])])])]);
+    to_mich(): att.Micheline {
+        return att.pair_to_mich([att.date_to_mich(this.start), att.date_to_mich(this.end), this.open.to_mich(), this.high.to_mich(), this.low.to_mich(), this.close.to_mich(), this.volume.to_mich()]);
     }
     equals(v: update_param): boolean {
-        return ((this.start.getTime() - this.start.getMilliseconds()) == (v.start.getTime() - v.start.getMilliseconds()) && (this.start.getTime() - this.start.getMilliseconds()) == (v.start.getTime() - v.start.getMilliseconds()) && (this.end.getTime() - this.end.getMilliseconds()) == (v.end.getTime() - v.end.getMilliseconds()) && this.open.equals(v.open) && this.high.equals(v.high) && this.low.equals(v.low) && this.close.equals(v.close) && this.volume.equals(v.volume));
+        return att.micheline_equals(this.to_mich(), v.to_mich());
+    }
+    static from_mich(input: att.Micheline): update_param {
+        return new update_param(att.mich_to_date((input as att.Mpair).args[0]), att.mich_to_date((input as att.Mpair).args[1]), att.Nat.from_mich((input as att.Mpair).args[2]), att.Nat.from_mich((input as att.Mpair).args[3]), att.Nat.from_mich((input as att.Mpair).args[4]), att.Nat.from_mich((input as att.Mpair).args[5]), att.Nat.from_mich((input as att.Mpair).args[6]));
     }
 }
-export const queue_mich_type: ex.MichelineType = ex.pair_array_to_mich_type([
-    ex.prim_annot_to_mich_type("int", ["%first"]),
-    ex.pair_array_to_mich_type([
-        ex.prim_annot_to_mich_type("int", ["%last"]),
-        ex.pair_array_to_mich_type([
-            ex.prim_annot_to_mich_type("nat", ["%sum"]),
-            ex.pair_to_mich_type("map", ex.prim_annot_to_mich_type("int", []), ex.prim_annot_to_mich_type("nat", []))
-        ])
-    ])
-]);
-export const update_param_mich_type: ex.MichelineType = ex.pair_array_to_mich_type([
-    ex.prim_annot_to_mich_type("timestamp", ["%start"]),
-    ex.pair_array_to_mich_type([
-        ex.prim_annot_to_mich_type("timestamp", ["%end"]),
-        ex.pair_array_to_mich_type([
-            ex.prim_annot_to_mich_type("nat", ["%open"]),
-            ex.pair_array_to_mich_type([
-                ex.prim_annot_to_mich_type("nat", ["%high"]),
-                ex.pair_array_to_mich_type([
-                    ex.prim_annot_to_mich_type("nat", ["%low"]),
-                    ex.pair_array_to_mich_type([
-                        ex.prim_annot_to_mich_type("nat", ["%close"]),
-                        ex.prim_annot_to_mich_type("nat", ["%volume"])
-                    ])
-                ])
-            ])
-        ])
-    ])
-]);
-export const mich_to_queue = (v: ex.Micheline, collapsed: boolean = false): queue => {
-    let fields: ex.Micheline[] = [];
-    if (collapsed) {
-        fields = ex.mich_to_pairs(v);
-    }
-    else {
-        fields = ex.annotated_mich_to_array(v, queue_mich_type);
-    }
-    return new queue(ex.mich_to_int(fields[0]), ex.mich_to_int(fields[1]), ex.mich_to_nat(fields[2]), ex.mich_to_map(fields[3], (x, y) => [ex.mich_to_int(x), ex.mich_to_nat(y)]));
-};
-export const mich_to_update_param = (v: ex.Micheline, collapsed: boolean = false): update_param => {
-    let fields: ex.Micheline[] = [];
-    if (collapsed) {
-        fields = ex.mich_to_pairs(v);
-    }
-    else {
-        fields = ex.annotated_mich_to_array(v, update_param_mich_type);
-    }
-    return new update_param(ex.mich_to_date(fields[0]), ex.mich_to_date(fields[1]), ex.mich_to_nat(fields[2]), ex.mich_to_nat(fields[3]), ex.mich_to_nat(fields[4]), ex.mich_to_nat(fields[5]), ex.mich_to_nat(fields[6]));
-};
-export type assetMap_key = string;
-export const assetMap_key_mich_type: ex.MichelineType = ex.prim_annot_to_mich_type("string", []);
-export class assetMap_value implements ex.ArchetypeType {
-    constructor(public computedPrice: ex.Nat, public lastUpdateTime: Date, public prices: queue, public volumes: queue) { }
+export const queue_mich_type: att.MichelineType = att.pair_array_to_mich_type([
+    att.prim_annot_to_mich_type("int", ["%first"]),
+    att.prim_annot_to_mich_type("int", ["%last"]),
+    att.prim_annot_to_mich_type("nat", ["%sum"]),
+    att.pair_annot_to_mich_type("map", att.prim_annot_to_mich_type("int", []), att.prim_annot_to_mich_type("nat", []), ["%saved"])
+], []);
+export const update_param_mich_type: att.MichelineType = att.pair_array_to_mich_type([
+    att.prim_annot_to_mich_type("timestamp", ["%start"]),
+    att.prim_annot_to_mich_type("timestamp", ["%end"]),
+    att.prim_annot_to_mich_type("nat", ["%open"]),
+    att.prim_annot_to_mich_type("nat", ["%high"]),
+    att.prim_annot_to_mich_type("nat", ["%low"]),
+    att.prim_annot_to_mich_type("nat", ["%close"]),
+    att.prim_annot_to_mich_type("nat", ["%volume"])
+], []);
+export const assetMap_key_mich_type: att.MichelineType = att.prim_annot_to_mich_type("string", []);
+export class assetMap_value implements att.ArchetypeType {
+    constructor(public computedPrice: att.Nat, public lastUpdateTime: Date, public prices: queue, public volumes: queue) { }
     toString(): string {
         return JSON.stringify(this, null, 2);
     }
-    to_mich(): ex.Micheline {
-        return ex.pair_to_mich([this.computedPrice.to_mich(), ex.pair_to_mich([ex.date_to_mich(this.lastUpdateTime), ex.pair_to_mich([this.prices.to_mich(), this.volumes.to_mich()])])]);
+    to_mich(): att.Micheline {
+        return att.pair_to_mich([this.computedPrice.to_mich(), att.date_to_mich(this.lastUpdateTime), this.prices.to_mich(), this.volumes.to_mich()]);
     }
     equals(v: assetMap_value): boolean {
-        return (this.computedPrice.equals(v.computedPrice) && this.computedPrice.equals(v.computedPrice) && (this.lastUpdateTime.getTime() - this.lastUpdateTime.getMilliseconds()) == (v.lastUpdateTime.getTime() - v.lastUpdateTime.getMilliseconds()) && this.prices == v.prices && this.volumes == v.volumes);
+        return att.micheline_equals(this.to_mich(), v.to_mich());
+    }
+    static from_mich(input: att.Micheline): assetMap_value {
+        return new assetMap_value(att.Nat.from_mich((input as att.Mpair).args[0]), att.mich_to_date((input as att.Mpair).args[1]), queue.from_mich((input as att.Mpair).args[2]), queue.from_mich(att.pair_to_mich((input as att.Mpair as att.Mpair).args.slice(3, 7))));
     }
 }
-export const assetMap_value_mich_type: ex.MichelineType = ex.pair_array_to_mich_type([
-    ex.prim_annot_to_mich_type("nat", ["%computedPrice"]),
-    ex.pair_array_to_mich_type([
-        ex.prim_annot_to_mich_type("timestamp", ["%lastUpdateTime"]),
-        ex.pair_array_to_mich_type([
-            ex.pair_array_to_mich_type([
-                ex.prim_annot_to_mich_type("int", ["%first"]),
-                ex.pair_array_to_mich_type([
-                    ex.prim_annot_to_mich_type("int", ["%last"]),
-                    ex.pair_array_to_mich_type([
-                        ex.prim_annot_to_mich_type("nat", ["%sum"]),
-                        ex.pair_to_mich_type("map", ex.prim_annot_to_mich_type("int", []), ex.prim_annot_to_mich_type("nat", []))
-                    ])
-                ])
-            ]),
-            ex.pair_array_to_mich_type([
-                ex.prim_annot_to_mich_type("int", ["%first"]),
-                ex.pair_array_to_mich_type([
-                    ex.prim_annot_to_mich_type("int", ["%last"]),
-                    ex.pair_array_to_mich_type([
-                        ex.prim_annot_to_mich_type("nat", ["%sum"]),
-                        ex.pair_to_mich_type("map", ex.prim_annot_to_mich_type("int", []), ex.prim_annot_to_mich_type("nat", []))
-                    ])
-                ])
-            ])
-        ])
-    ])
-]);
-export const mich_to_assetMap_value = (v: ex.Micheline, collapsed: boolean = false): assetMap_value => {
-    let fields: ex.Micheline[] = [];
-    if (collapsed) {
-        fields = ex.mich_to_pairs(v);
-    }
-    else {
-        fields = ex.annotated_mich_to_array(v, assetMap_value_mich_type);
-    }
-    return new assetMap_value(ex.mich_to_nat(fields[0]), ex.mich_to_date(fields[1]), mich_to_queue(fields[2], collapsed), mich_to_queue({ prim: "Pair", args: fields.slice(3) }, collapsed));
-};
+export const assetMap_value_mich_type: att.MichelineType = att.pair_array_to_mich_type([
+    att.prim_annot_to_mich_type("nat", ["%computedPrice"]),
+    att.prim_annot_to_mich_type("timestamp", ["%lastUpdateTime"]),
+    att.pair_array_to_mich_type([
+        att.prim_annot_to_mich_type("int", ["%first"]),
+        att.prim_annot_to_mich_type("int", ["%last"]),
+        att.prim_annot_to_mich_type("nat", ["%sum"]),
+        att.pair_annot_to_mich_type("map", att.prim_annot_to_mich_type("int", []), att.prim_annot_to_mich_type("nat", []), ["%saved"])
+    ], ["%prices"]),
+    att.pair_array_to_mich_type([
+        att.prim_annot_to_mich_type("int", ["%first"]),
+        att.prim_annot_to_mich_type("int", ["%last"]),
+        att.prim_annot_to_mich_type("nat", ["%sum"]),
+        att.pair_annot_to_mich_type("map", att.prim_annot_to_mich_type("int", []), att.prim_annot_to_mich_type("nat", []), ["%saved"])
+    ], ["%volumes"])
+], []);
 export type assetMap_container = Array<[
-    assetMap_key,
+    string,
     assetMap_value
 ]>;
-export const assetMap_container_mich_type: ex.MichelineType = ex.pair_to_mich_type("big_map", ex.prim_annot_to_mich_type("string", []), ex.pair_array_to_mich_type([
-    ex.prim_annot_to_mich_type("nat", ["%computedPrice"]),
-    ex.pair_array_to_mich_type([
-        ex.prim_annot_to_mich_type("timestamp", ["%lastUpdateTime"]),
-        ex.pair_array_to_mich_type([
-            ex.pair_array_to_mich_type([
-                ex.prim_annot_to_mich_type("int", ["%first"]),
-                ex.pair_array_to_mich_type([
-                    ex.prim_annot_to_mich_type("int", ["%last"]),
-                    ex.pair_array_to_mich_type([
-                        ex.prim_annot_to_mich_type("nat", ["%sum"]),
-                        ex.pair_to_mich_type("map", ex.prim_annot_to_mich_type("int", []), ex.prim_annot_to_mich_type("nat", []))
-                    ])
-                ])
-            ]),
-            ex.pair_array_to_mich_type([
-                ex.prim_annot_to_mich_type("int", ["%first"]),
-                ex.pair_array_to_mich_type([
-                    ex.prim_annot_to_mich_type("int", ["%last"]),
-                    ex.pair_array_to_mich_type([
-                        ex.prim_annot_to_mich_type("nat", ["%sum"]),
-                        ex.pair_to_mich_type("map", ex.prim_annot_to_mich_type("int", []), ex.prim_annot_to_mich_type("nat", []))
-                    ])
-                ])
-            ])
-        ])
-    ])
-]));
+export const assetMap_container_mich_type: att.MichelineType = att.pair_annot_to_mich_type("big_map", att.prim_annot_to_mich_type("string", []), att.pair_array_to_mich_type([
+    att.prim_annot_to_mich_type("nat", ["%computedPrice"]),
+    att.prim_annot_to_mich_type("timestamp", ["%lastUpdateTime"]),
+    att.pair_array_to_mich_type([
+        att.prim_annot_to_mich_type("int", ["%first"]),
+        att.prim_annot_to_mich_type("int", ["%last"]),
+        att.prim_annot_to_mich_type("nat", ["%sum"]),
+        att.pair_annot_to_mich_type("map", att.prim_annot_to_mich_type("int", []), att.prim_annot_to_mich_type("nat", []), ["%saved"])
+    ], ["%prices"]),
+    att.pair_array_to_mich_type([
+        att.prim_annot_to_mich_type("int", ["%first"]),
+        att.prim_annot_to_mich_type("int", ["%last"]),
+        att.prim_annot_to_mich_type("nat", ["%sum"]),
+        att.pair_annot_to_mich_type("map", att.prim_annot_to_mich_type("int", []), att.prim_annot_to_mich_type("nat", []), ["%saved"])
+    ], ["%volumes"])
+], []), []);
 const update_arg_to_mich = (upm: Array<[
     string,
     update_param
-]>): ex.Micheline => {
-    return ex.list_to_mich(upm, x => {
+]>): att.Micheline => {
+    return att.list_to_mich(upm, x => {
         const x_key = x[0];
         const x_value = x[1];
-        return ex.elt_to_mich(ex.string_to_mich(x_key), x_value.to_mich());
+        return att.elt_to_mich(att.string_to_mich(x_key), x_value.to_mich());
     });
 }
+const get_arg_to_mich = (requestedAsset: string): att.Micheline => {
+    return att.string_to_mich(requestedAsset);
+}
+const view_getPrice_arg_to_mich = (requestedAsset: string): att.Micheline => {
+    return att.string_to_mich(requestedAsset);
+}
+export const deploy_get_callback = async (params: Partial<ex.Parameters>): Promise<att.DeployResult> => {
+    return await ex.deploy_callback("get", att.pair_array_to_mich_type([
+        att.prim_annot_to_mich_type("string", []),
+        att.prim_annot_to_mich_type("timestamp", []),
+        att.prim_annot_to_mich_type("nat", [])
+    ], []), params);
+};
 export class Normalizer {
     address: string | undefined;
-    get_address(): ex.Address {
-        if (undefined != this.address) {
-            return new ex.Address(this.address);
-        }
-        throw new Error("Contract not initialised");
-    }
-    async get_balance(): Promise<ex.Tez> {
-        if (null != this.address) {
-            return await ex.get_balance(new ex.Address(this.address));
-        }
-        throw new Error("Contract not initialised");
-    }
-    async deploy(assetCodes: Array<string>, oracleContract: ex.Address, numDataPoints: ex.Nat, params: Partial<ex.Parameters>) {
-        const address = await ex.deploy("./contracts/normalizer.arl", {
-            assetCodes: assetCodes.map(e => e),
-            oracleContract: oracleContract.toString(),
-            numDataPoints: numDataPoints.toString()
-        }, params);
+    constructor(address: string | undefined = undefined) {
         this.address = address;
+    }
+    get_callback_address: string | undefined;
+    get_address(): att.Address {
+        if (undefined != this.address) {
+            return new att.Address(this.address);
+        }
+        throw new Error("Contract not initialised");
+    }
+    async get_balance(): Promise<att.Tez> {
+        if (null != this.address) {
+            return await ex.get_balance(new att.Address(this.address));
+        }
+        throw new Error("Contract not initialised");
+    }
+    async deploy(assetCodes: Array<string>, oracleContract: att.Address, numDataPoints: att.Nat, empty_queue: queue, params: Partial<ex.Parameters>) {
+        const address = (await ex.deploy("./contracts/normalizer.arl", {
+            assetCodes: att.list_to_mich(assetCodes, x => {
+                return att.string_to_mich(x);
+            }),
+            oracleContract: oracleContract.to_mich(),
+            numDataPoints: numDataPoints.to_mich(),
+            empty_queue: empty_queue.to_mich()
+        }, params)).address;
+        this.address = address;
+        this.get_callback_address = (await deploy_get_callback(params)).address;
     }
     async update(upm: Array<[
         string,
         update_param
-    ]>, params: Partial<ex.Parameters>): Promise<any> {
+    ]>, params: Partial<ex.Parameters>): Promise<att.CallResult> {
         if (this.address != undefined) {
-            await ex.call(this.address, "update", update_arg_to_mich(upm), params);
+            return await ex.call(this.address, "update", update_arg_to_mich(upm), params);
         }
+        throw new Error("Contract not initialised");
+    }
+    async get_update_param(upm: Array<[
+        string,
+        update_param
+    ]>, params: Partial<ex.Parameters>): Promise<att.CallParameter> {
+        if (this.address != undefined) {
+            return await ex.get_call_param(this.address, "update", update_arg_to_mich(upm), params);
+        }
+        throw new Error("Contract not initialised");
+    }
+    async get(requestedAsset: string, params: Partial<ex.Parameters>): Promise<[
+        string,
+        Date,
+        att.Nat
+    ]> {
+        if (this.address != undefined) {
+            if (this.get_callback_address != undefined) {
+                const entrypoint = new att.Entrypoint(new att.Address(this.get_callback_address), "callback");
+                await ex.call(this.address, "get", att.getter_args_to_mich(get_arg_to_mich(requestedAsset), entrypoint), params);
+                return await ex.get_callback_value<[
+                    string,
+                    Date,
+                    att.Nat
+                ]>(this.get_callback_address, x => { return (p => {
+                    return [att.mich_to_string((p as att.Mpair).args[0]), att.mich_to_date((p as att.Mpair).args[1]), att.Nat.from_mich((p as att.Mpair).args[2])];
+                })(x); });
+            }
+        }
+        throw new Error("Contract not initialised");
+    }
+    async view_getPrice(requestedAsset: string, params: Partial<ex.Parameters>): Promise<[
+        Date,
+        att.Nat
+    ] | undefined> {
+        if (this.address != undefined) {
+            const mich = await ex.exec_view(this.get_address(), "getPrice", view_getPrice_arg_to_mich(requestedAsset), params);
+            return mich.value ? (p => {
+                return [att.mich_to_date((p as att.Mpair).args[0]), att.Nat.from_mich((p as att.Mpair).args[1])];
+            })(mich.value) : undefined;
+        }
+        throw new Error("Contract not initialised");
     }
     async get_assetCodes(): Promise<Array<string>> {
         if (this.address != undefined) {
-            const storage = await ex.get_storage(this.address);
-            const res: Array<string> = [];
-            for (let i = 0; i < storage.assetCodes.length; i++) {
-                res.push((x => { return x; })(storage.assetCodes[i]));
-            }
-            return res;
+            const storage = await ex.get_raw_storage(this.address);
+            return att.mich_to_list((storage as att.Mpair).args[0], x => { return att.mich_to_string(x); });
         }
         throw new Error("Contract not initialised");
     }
-    async get_oracleContract(): Promise<ex.Address> {
+    async get_oracleContract(): Promise<att.Address> {
         if (this.address != undefined) {
-            const storage = await ex.get_storage(this.address);
-            return new ex.Address(storage.oracleContract);
+            const storage = await ex.get_raw_storage(this.address);
+            return att.Address.from_mich((storage as att.Mpair).args[1]);
         }
         throw new Error("Contract not initialised");
     }
-    async get_numDataPoints(): Promise<ex.Nat> {
+    async get_numDataPoints(): Promise<att.Nat> {
         if (this.address != undefined) {
-            const storage = await ex.get_storage(this.address);
-            return new ex.Nat(storage.numDataPoints);
+            const storage = await ex.get_raw_storage(this.address);
+            return att.Nat.from_mich((storage as att.Mpair).args[2]);
         }
         throw new Error("Contract not initialised");
     }
-    async get_assetMap_value(key: assetMap_key): Promise<assetMap_value | undefined> {
+    async get_assetMap_value(key: string): Promise<assetMap_value | undefined> {
         if (this.address != undefined) {
-            const storage = await ex.get_storage(this.address);
-            const data = await ex.get_big_map_value(BigInt(storage.assetMap), ex.string_to_mich(key), assetMap_key_mich_type);
+            const storage = await ex.get_raw_storage(this.address);
+            const data = await ex.get_big_map_value(BigInt(att.Int.from_mich((storage as att.Mpair).args[3]).toString()), att.string_to_mich(key), assetMap_key_mich_type);
             if (data != undefined) {
-                return mich_to_assetMap_value(data, true);
+                return assetMap_value.from_mich(data);
             }
             else {
                 return undefined;
@@ -242,11 +241,24 @@ export class Normalizer {
         }
         throw new Error("Contract not initialised");
     }
+    async has_assetMap_value(key: string): Promise<boolean> {
+        if (this.address != undefined) {
+            const storage = await ex.get_raw_storage(this.address);
+            const data = await ex.get_big_map_value(BigInt(att.Int.from_mich((storage as att.Mpair).args[3]).toString()), att.string_to_mich(key), assetMap_key_mich_type);
+            if (data != undefined) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        throw new Error("Contract not initialised");
+    }
     errors = {
-        OPTION_IS_NONE: ex.string_to_mich("\"OPTION_IS_NONE\""),
-        BAD_SENDER: ex.string_to_mich("\"bad sender\""),
-        BAD_REQUEST: ex.string_to_mich("\"bad request\""),
-        INVALID_SUM: ex.string_to_mich("\"invalid sum\"")
+        OPTION_IS_NONE: att.string_to_mich("\"OPTION_IS_NONE\""),
+        BAD_SENDER: att.string_to_mich("\"bad sender\""),
+        BAD_REQUEST: att.string_to_mich("\"bad request\""),
+        INVALID_SUM: att.string_to_mich("\"invalid sum\"")
     };
 }
 export const normalizer = new Normalizer();

@@ -1,6 +1,7 @@
 /* Imports ----------------------------------------------------------------- */
 
-import { Account, expect_to_fail, get_account, Nat, Option, option_to_mich_type, pack, pair_array_to_mich_type, pair_to_mich, pair_to_mich_type, prim_to_mich_type, set_mockup, set_mockup_now, set_quiet, sign, string_to_mich } from '@completium/experiment-ts'
+import { Key, Nat, Option, option_to_mich_type, pair_array_to_mich_type, pair_to_mich, prim_to_mich_type, string_to_mich } from '@completium/archetype-ts-types'
+import { Account, expect_to_fail, get_account, pack, set_mockup, set_mockup_now, set_quiet, sign } from '@completium/experiment-ts'
 
 const assert = require('assert')
 
@@ -14,7 +15,7 @@ import {
 /* Accounts ---------------------------------------------------------------- */
 
 const alice = get_account('alice');
-const bob   = get_account('bob');
+const bob = get_account('bob');
 
 /* Endpoint ---------------------------------------------------------------- */
 
@@ -30,24 +31,24 @@ set_mockup_now(new Date(Date.now()))
 
 /* Utils ------------------------------------------------------------------- */
 
-export const sign_oracle_data = async (key : string, data : oracleData_value, signer : Account) => {
+export const sign_oracle_data = async (key: string, data: oracleData_value, signer: Account) => {
   const value = pair_to_mich([string_to_mich(key), data.to_mich()])
-  const type  = pair_array_to_mich_type([prim_to_mich_type("string"), oracleData_value_mich_type])
+  const type = pair_array_to_mich_type([prim_to_mich_type("string"), oracleData_value_mich_type])
   const packed = pack(value, type)
   return await sign(packed, signer)
 }
 
-export const sign_oracle_revoke = async (signer : Account) => {
-  const value = Option.None();
-  const type  = option_to_mich_type(prim_to_mich_type("key"))
-  const packed = pack(value.to_mich(), type)
+export const sign_oracle_revoke = async (signer: Account) => {
+  const value: Option<Key> = Option.None();
+  const type = option_to_mich_type(prim_to_mich_type("key"))
+  const packed = pack(value.to_mich(((x: Key) => { return x.to_mich() })), type)
   return await sign(packed, signer)
 }
 
 /* Data -------------------------------------------------------------------- */
 
-export const asset1          = "XTZ-USD"
-export const asset2          = "BTC-USD"
+export const asset1 = "XTZ-USD"
+export const asset2 = "BTC-USD"
 const asset_untracked = "XTZ-BTC"
 const input1 = new oracleData_value(
   new Date('1970-01-01T00:00:01Z'),
@@ -106,7 +107,7 @@ describe('[Oracle] Contract deployment', async () => {
 describe('[Oracle] Update', async () => {
   it('Update once with valid data', async () => {
     const sig = await sign_oracle_data(asset1, input1, alice)
-    await oracle.update([ [ asset1, [ sig, input1 ] ] ], {
+    await oracle.update([[asset1, [sig, input1]]], {
       as: alice
     })
     const output = await oracle.get_oracleData_value(asset1);
@@ -114,7 +115,7 @@ describe('[Oracle] Update', async () => {
   })
   it('Second Update Overwrites First Update', async () => {
     const sig = await sign_oracle_data(asset1, input2, alice)
-    await oracle.update([ [ asset1, [ sig, input2 ] ] ], {
+    await oracle.update([[asset1, [sig, input2]]], {
       as: alice
     })
     const output = await oracle.get_oracleData_value(asset1);
@@ -122,7 +123,7 @@ describe('[Oracle] Update', async () => {
   })
   it('Correctly Processes Updates With Data From The Past', async () => {
     const sig = await sign_oracle_data(asset1, input_past, alice)
-    await oracle.update([ [ asset1, [ sig, input_past ] ] ], {
+    await oracle.update([[asset1, [sig, input_past]]], {
       as: alice
     })
     const output = await oracle.get_oracleData_value(asset1);
@@ -130,7 +131,7 @@ describe('[Oracle] Update', async () => {
   })
   it('Untracked Asset does not update oracle', async () => {
     const sig = await sign_oracle_data(asset_untracked, input1, alice)
-    await oracle.update([ [ asset_untracked, [ sig, input1 ] ] ], {
+    await oracle.update([[asset_untracked, [sig, input1]]], {
       as: alice
     })
     const output = await oracle.get_oracleData_value(asset_untracked);
@@ -139,7 +140,7 @@ describe('[Oracle] Update', async () => {
   it('Update Fails With Bad Signature', async () => {
     const sig = await sign_oracle_data(asset1, input3, bob)
     expect_to_fail(async () => {
-      await oracle.update([ [ asset1, [ sig, input3 ] ] ], {
+      await oracle.update([[asset1, [sig, input3]]], {
         as: alice
       })
     }, oracle.errors.BAD_SIG)
@@ -147,7 +148,7 @@ describe('[Oracle] Update', async () => {
   it('Update with stale asset does not fail', async () => {
     const sig1 = await sign_oracle_data(asset1, input3, alice)
     const sig2 = await sign_oracle_data(asset2, input1, alice)
-    await oracle.update([ [ asset2, [ sig2, input1 ] ], [ asset1, [ sig1, input3 ] ], ], {
+    await oracle.update([[asset2, [sig2, input1]], [asset1, [sig1, input3]],], {
       as: alice
     })
     const output1 = await oracle.get_oracleData_value(asset1);
@@ -155,7 +156,7 @@ describe('[Oracle] Update', async () => {
     const output2 = await oracle.get_oracleData_value(asset2);
     (output2 != undefined) ? assert(output2.equals(input1)) : assert(false)
     const sig3 = await sign_oracle_data(asset1, input4, alice)
-    await oracle.update([ [ asset2, [ sig2, input1 ] ],[ asset1, [ sig3, input4 ] ] ], {
+    await oracle.update([[asset2, [sig2, input1]], [asset1, [sig3, input4]]], {
       as: alice
     })
     const output3 = await oracle.get_oracleData_value(asset1);
@@ -169,12 +170,12 @@ describe('[Oracle] Revoke', async () => {
   it('Incorrect Revoke Fails to Revoke An Oracle', async () => {
     const sig = await sign_oracle_revoke(bob)
     expect_to_fail(async () => {
-      await oracle.revoke(sig, { as : alice })
+      await oracle.revoke(sig, { as: alice })
     }, oracle.errors.BAD_SIG)
   })
   it('Revoke Oracle', async () => {
     const sig = await sign_oracle_revoke(alice)
-    await oracle.revoke(sig, { as : alice })
+    await oracle.revoke(sig, { as: alice })
     const state = await oracle.get_state()
     assert(state == states.Revoked)
     const output = await oracle.get_oracleData_value(asset1);
@@ -183,7 +184,7 @@ describe('[Oracle] Revoke', async () => {
   it('Update Fails when Revoked', async () => {
     const sig = await sign_oracle_data(asset1, input3, alice)
     expect_to_fail(async () => {
-      await oracle.update([ [ asset1, [ sig, input3 ] ] ], {
+      await oracle.update([[asset1, [sig, input3]]], {
         as: alice
       })
     }, oracle.errors.REVOKED)

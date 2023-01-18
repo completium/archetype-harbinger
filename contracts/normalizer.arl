@@ -1,7 +1,8 @@
 archetype normalizer(
   assetCodes     : list<string>,
   oracleContract : address,
-  numDataPoints  : nat
+  numDataPoints  : nat,
+  const empty_queue : queue
 )
 
 constant INVALID_CALLER : string = "bad sender"
@@ -31,8 +32,8 @@ asset assetMap to big_map {
   prices         : queue;
   volumes        : queue
 } initialized by {
-  { "XTZ-USD"; 0; int_to_date(0); { 0; (-1); 0; [ ] }; { 0; (-1); 0; [ ] } };
-  { "BTC-USD"; 0; int_to_date(0); { 0; (-1); 0; [ ] }; { 0; (-1); 0; [ ] } }
+  { "XTZ-USD"; 0; int_to_date(0); empty_queue; empty_queue };
+  { "BTC-USD"; 0; int_to_date(0); empty_queue; empty_queue }
 }
 
 record update_param {
