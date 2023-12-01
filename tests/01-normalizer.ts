@@ -7,7 +7,7 @@ import { asset1, sign_oracle_data } from './00-oracle'
 import { normalizer, queue } from './binding/normalizer'
 import { oracle, oracleData_value } from './binding/oracle'
 
-const assert = require('assert')
+import assert from 'assert';
 
 /* Accounts ---------------------------------------------------------------- */
 
@@ -123,7 +123,7 @@ const VWAP6 = computeVWAP(input6.high, input6.low, input6.close, input6.volume)
 
 /* Scenario ---------------------------------------------------------------- */
 
-describe('[Normalizer] Contracts deployment', async () => {
+describe('[Normalizer] Contracts deployment', () => {
   it('Deploy Oracle', async () => {
     await oracle.deploy(alice.get_public_key(), { as: alice })
   });
@@ -144,9 +144,9 @@ describe('[Normalizer] Contracts deployment', async () => {
   });
 })
 
-describe('[Normalizer] Update', async () => {
+describe('[Normalizer] Update', () => {
   it('Fails when data is pushed from bad address', async () => {
-    expect_to_fail(async () => {
+    await expect_to_fail(async () => {
       await normalizer.update([["XTZ-USD", input0]], { as: alice })
     }, normalizer.errors.BAD_SENDER)
   })

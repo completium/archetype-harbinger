@@ -3,7 +3,7 @@
 import { Key, Nat, Option, option_to_mich_type, pair_array_to_mich_type, pair_to_mich, prim_to_mich_type, string_to_mich } from '@completium/archetype-ts-types'
 import { Account, expect_to_fail, get_account, pack, set_mockup, set_mockup_now, set_quiet, sign } from '@completium/experiment-ts'
 
-const assert = require('assert')
+import assert from 'assert';
 
 import {
   oracle,
@@ -98,13 +98,13 @@ const input4 = new oracleData_value(
 
 /* Scenario ---------------------------------------------------------------- */
 
-describe('[Oracle] Contract deployment', async () => {
+describe('[Oracle] Contract deployment', () => {
   it('Deploy Oracle', async () => {
     await oracle.deploy(alice.get_public_key(), { as: alice })
   });
 })
 
-describe('[Oracle] Update', async () => {
+describe('[Oracle] Update', () => {
   it('Update once with valid data', async () => {
     const sig = await sign_oracle_data(asset1, input1, alice)
     await oracle.update([[asset1, [sig, input1]]], {
@@ -139,7 +139,7 @@ describe('[Oracle] Update', async () => {
   })
   it('Update Fails With Bad Signature', async () => {
     const sig = await sign_oracle_data(asset1, input3, bob)
-    expect_to_fail(async () => {
+    await expect_to_fail(async () => {
       await oracle.update([[asset1, [sig, input3]]], {
         as: alice
       })
@@ -166,10 +166,10 @@ describe('[Oracle] Update', async () => {
   })
 })
 
-describe('[Oracle] Revoke', async () => {
+describe('[Oracle] Revoke', () => {
   it('Incorrect Revoke Fails to Revoke An Oracle', async () => {
     const sig = await sign_oracle_revoke(bob)
-    expect_to_fail(async () => {
+    await expect_to_fail(async () => {
       await oracle.revoke(sig, { as: alice })
     }, oracle.errors.BAD_SIG)
   })
@@ -183,7 +183,7 @@ describe('[Oracle] Revoke', async () => {
   })
   it('Update Fails when Revoked', async () => {
     const sig = await sign_oracle_data(asset1, input3, alice)
-    expect_to_fail(async () => {
+    await expect_to_fail(async () => {
       await oracle.update([[asset1, [sig, input3]]], {
         as: alice
       })
