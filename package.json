@@ -29,9 +29,9 @@
   },
   "homepage": "https://github.com/completium/archetype-harbinger#readme",
   "dependencies": {
-    "@completium/archetype-ts-types": "0.1.10",
-    "@completium/completium-cli": "^1.0.3",
-    "@completium/experiment-ts": "^1.0.0",
+    "@completium/archetype-ts-types": "0.1.12",
+    "@completium/completium-cli": "^1.0.13",
+    "@completium/experiment-ts": "^1.0.3",
     "@completium/event-listener": "0.0.5"
   },
   "devDependencies": {
